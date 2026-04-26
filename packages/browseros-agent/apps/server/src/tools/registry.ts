@@ -47,6 +47,7 @@ import {
   wait_for,
 } from './navigation'
 import { suggest_app_connection, suggest_schedule } from './nudges'
+import { office_status } from './office'
 import { download_file, save_pdf, save_screenshot } from './page-actions'
 import {
   evaluate_script,
@@ -146,6 +147,9 @@ export const registry = createRegistry([
   update_tab_group,
   ungroup_tabs,
   close_tab_group,
+
+  // Office Suite (1)
+  office_status,
 
   // Info (1)
   browseros_info,

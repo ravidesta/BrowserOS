@@ -29,6 +29,7 @@ import { LogoutPage } from './login/LogoutPage'
 import { MagicLinkCallback } from './login/MagicLinkCallback'
 import { MCPSettingsPage } from './mcp-settings/MCPSettingsPage'
 import { MemoryPage } from './memory/MemoryPage'
+import { OfficeSuitePage } from './office-suite/OfficeSuitePage'
 import { ProfilePage } from './profile/ProfilePage'
 import { ScheduledTasksPage } from './scheduled-tasks/ScheduledTasksPage'
 import { SearchProviderPage } from './search-provider/SearchProviderPage'
@@ -112,6 +113,7 @@ export const App: FC = () => {
           {/* Primary nav routes */}
           <Route path="connect-apps" element={<ConnectMCP />} />
           <Route path="scheduled" element={<ScheduledTasksPage />} />
+          <Route path="office" element={<OfficeSuitePage />} />
           {alphaEnabled ? (
             <>
               <Route path="agents" element={<AgentsPage />} />
