@@ -49,6 +49,7 @@ import { LlmProvidersHeader } from './LlmProvidersHeader'
 import { McpPromoBanner } from './McpPromoBanner'
 import { NewProviderDialog } from './NewProviderDialog'
 import { ProviderTemplatesSection } from './ProviderTemplatesSection'
+import { VoiceSettingsCard } from './VoiceSettingsCard'
 
 // All OAuth providers share the same flow via useOAuthProviderFlow
 const OAUTH_PROVIDERS_CONFIG: Record<string, OAuthProviderFlowConfig> = {
@@ -378,6 +379,8 @@ export const AISettingsPage: FC = () => {
         onAddKeys={handleAddKeysToIncomplete}
         onDelete={handleDeleteIncompleteProvider}
       />
+
+      <VoiceSettingsCard />
 
       <NewProviderDialog
         open={isNewDialogOpen}
