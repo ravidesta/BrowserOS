@@ -33,6 +33,7 @@ const providerIconMap: Record<ProviderType, IconComponent | null> = {
   bedrock: Bedrock,
   browseros: null,
   moonshot: Kimi,
+  mistral: null,
   'chatgpt-pro': OpenAI,
   'github-copilot': Github,
   'qwen-code': Qwen,

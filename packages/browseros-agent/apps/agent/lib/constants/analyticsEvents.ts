@@ -294,3 +294,21 @@ export const SIDEPANEL_VOICE_TRANSCRIPTION_COMPLETED_EVENT =
 
 /** @public */
 export const SIDEPANEL_VOICE_ERROR_EVENT = 'sidepanel.voice.error'
+
+/** @public */
+export const COACH_OPENED_EVENT = 'coach.opened'
+
+/** @public */
+export const COACH_MESSAGE_SENT_EVENT = 'coach.message.sent'
+
+/** @public */
+export const COACH_MODE_TOGGLED_EVENT = 'coach.mode.toggled'
+
+/** @public */
+export const COACH_VOICE_RECORDED_EVENT = 'coach.voice.recorded'
+
+/** @public */
+export const COACH_VOICE_SPOKEN_EVENT = 'coach.voice.spoken'
+
+/** @public */
+export const COACH_RESET_EVENT = 'coach.reset'

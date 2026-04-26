@@ -1,5 +1,6 @@
 import type { FC } from 'react'
 import { HashRouter, Route, Routes } from 'react-router'
+import { CoachPage } from './coach/CoachPage'
 import { ChatHistory } from './history/ChatHistory'
 import { Chat } from './index/Chat'
 import { ChatLayout } from './layout/ChatLayout'
@@ -12,6 +13,7 @@ export const App: FC = () => {
           <Route index element={<Chat />} />
           <Route path="history" element={<ChatHistory />} />
         </Route>
+        <Route path="coach" element={<CoachPage />} />
       </Routes>
     </HashRouter>
   )

@@ -336,6 +336,38 @@
     }
   }
 
+  @keyframes coach-orb-idle {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.95;
+    }
+    50% {
+      transform: scale(1.04);
+      opacity: 1;
+    }
+  }
+
+  @keyframes coach-orb-speak {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.95;
+    }
+    25% {
+      transform: scale(1.08);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(0.97);
+      opacity: 0.92;
+    }
+    75% {
+      transform: scale(1.06);
+      opacity: 1;
+    }
+  }
+
   .bg-grid-pattern {
     background-image:
       linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
@@ -384,6 +416,14 @@
   /* Added utility class for shine animation on card hover */
   .animate-shine {
     animation: shine 0.8s ease-in-out;
+  }
+
+  .animate-coach-orb-idle {
+    animation: coach-orb-idle 3.6s ease-in-out infinite;
+  }
+
+  .animate-coach-orb-speak {
+    animation: coach-orb-speak 1.4s ease-in-out infinite;
   }
 
   /* Collapsible animation utility classes */
