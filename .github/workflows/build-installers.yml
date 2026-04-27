@@ -1,0 +1,181 @@
+name: Build BrowserOS Installers
+
+# Builds full BrowserOS Chromium installers per OS using packages/browseros/build/.
+# Manual-trigger only (workflow_dispatch) — a full Chromium build runs for hours.
+# Produces signed installers when signing secrets are configured (see
+# .github/INSTALLERS.md). When secrets are absent, produces unsigned dev
+# builds so the pipeline still produces installable artifacts.
+
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: "Which OS to build"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - macos
+          - windows
+          - linux
+      sign:
+        description: "Sign + notarize (requires repo secrets)"
+        required: true
+        default: true
+        type: boolean
+      release:
+        description: "Attach artifacts to a GitHub draft release"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  pick-os:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - id: set
+        run: |
+          case "${{ inputs.os }}" in
+            all)
+              echo 'matrix={"include":[
+                {"os":"macos","runner":"macos-14-large"},
+                {"os":"windows","runner":"windows-2022"},
+                {"os":"linux","runner":"ubuntu-24.04"}
+              ]}' >> "$GITHUB_OUTPUT"
+              ;;
+            macos)
+              echo 'matrix={"include":[{"os":"macos","runner":"macos-14-large"}]}' >> "$GITHUB_OUTPUT"
+              ;;
+            windows)
+              echo 'matrix={"include":[{"os":"windows","runner":"windows-2022"}]}' >> "$GITHUB_OUTPUT"
+              ;;
+            linux)
+              echo 'matrix={"include":[{"os":"linux","runner":"ubuntu-24.04"}]}' >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
+  build:
+    needs: pick-os
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.pick-os.outputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 360
+    defaults:
+      run:
+        working-directory: packages/browseros
+    env:
+      BROWSEROS_BUILD_OS: ${{ matrix.os }}
+      BROWSEROS_SIGN: ${{ inputs.sign }}
+      MACOS_CERT_P12_BASE64: ${{ secrets.MACOS_CERT_P12_BASE64 }}
+      MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+      MACOS_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
+      APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+      APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+      APPLE_NOTARY_KEY_BASE64: ${{ secrets.APPLE_NOTARY_KEY_BASE64 }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      CODE_SIGN_TOOL_PATH: ${{ secrets.WINDOWS_CODE_SIGN_TOOL_PATH }}
+      ESIGNER_USERNAME: ${{ secrets.WINDOWS_ESIGNER_USERNAME }}
+      ESIGNER_PASSWORD: ${{ secrets.WINDOWS_ESIGNER_PASSWORD }}
+      ESIGNER_TOTP_SECRET: ${{ secrets.WINDOWS_ESIGNER_TOTP_SECRET }}
+      SPARKLE_PRIVATE_KEY_BASE64: ${{ secrets.SPARKLE_PRIVATE_KEY_BASE64 }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build deps
+        run: pip install -r requirements.txt && pip install -e .
+
+      - name: Detect signing readiness
+        id: signing
+        shell: bash
+        run: |
+          ready=false
+          if [ "${{ inputs.sign }}" = "true" ]; then
+            case "${{ matrix.os }}" in
+              macos)
+                if [ -n "$MACOS_CERT_P12_BASE64" ] && [ -n "$APPLE_NOTARY_KEY_BASE64" ]; then ready=true; fi
+                ;;
+              windows)
+                if [ -n "$ESIGNER_USERNAME" ] && [ -n "$ESIGNER_PASSWORD" ]; then ready=true; fi
+                ;;
+              linux)
+                ready=true
+                ;;
+            esac
+          fi
+          echo "ready=$ready" >> "$GITHUB_OUTPUT"
+          if [ "$ready" = "false" ] && [ "${{ inputs.sign }}" = "true" ]; then
+            echo "::warning::Signing requested but signing secrets are not configured for ${{ matrix.os }}. Falling back to unsigned dev build. See .github/INSTALLERS.md."
+          fi
+
+      - name: Run full build pipeline
+        shell: bash
+        env:
+          SIGNING_READY: ${{ steps.signing.outputs.ready }}
+        run: |
+          set -euo pipefail
+          phases="--setup --prep --build --package"
+          if [ "$SIGNING_READY" = "true" ]; then
+            phases="--setup --prep --build --sign --package"
+          fi
+          python -m build $phases
+
+      - name: Collect installer artifacts
+        id: collect
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/installers"
+          # The build pipeline writes installers under packages/browseros/out or
+          # similar; we glob for the standard installer extensions.
+          find . -type f \( \
+            -name "*.dmg" -o \
+            -name "*.exe" -o \
+            -name "*.msi" -o \
+            -name "*.AppImage" -o \
+            -name "*.deb" -o \
+            -name "*.rpm" -o \
+            -name "*.zip" \
+          \) -exec cp {} "$GITHUB_WORKSPACE/installers/" \;
+          ls -lh "$GITHUB_WORKSPACE/installers/" || true
+          echo "dir=$GITHUB_WORKSPACE/installers" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: browseros-installer-${{ matrix.os }}-${{ github.sha }}
+          path: ${{ steps.collect.outputs.dir }}
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Attach to draft release
+        if: ${{ inputs.release == true }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        working-directory: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          TAG="installers-${{ github.ref_name }}-$(echo ${{ github.sha }} | cut -c1-7)"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              --draft \
+              --title "Installers — ${{ github.ref_name }} ($(echo ${{ github.sha }} | cut -c1-7))" \
+              --notes "Automated installer build. OS: ${{ matrix.os }}. Signed: ${{ steps.signing.outputs.ready }}."
+          fi
+          for file in "${{ steps.collect.outputs.dir }}"/*; do
+            [ -f "$file" ] || continue
+            gh release upload "$TAG" "$file" --clobber
+          done
