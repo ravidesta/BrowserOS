@@ -1,4 +1,4 @@
-import { Github, History, Plus, SettingsIcon } from 'lucide-react'
+import { Github, History, Plus, SettingsIcon, Sparkles } from 'lucide-react'
 import type { FC } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { ChatProviderSelector } from '@/components/chat/ChatProviderSelector'
@@ -81,6 +81,14 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-1">
+        <Link
+          to="/coach"
+          className="cursor-pointer rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+          title="Open Coach"
+        >
+          <Sparkles className="h-4 w-4" />
+        </Link>
+
         {!isHistoryPage && hasMessages && (
           <button
             type="button"
