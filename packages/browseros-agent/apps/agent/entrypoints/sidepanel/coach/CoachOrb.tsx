@@ -11,9 +11,9 @@ interface CoachOrbProps {
   className?: string
 }
 
-const baseGold = 'rgb(212, 175, 55)'
-const lightGold = 'rgb(248, 222, 126)'
-const deepGold = 'rgb(157, 116, 18)'
+const baseGold = 'rgb(197, 160, 89)'
+const lightGold = 'rgb(235, 207, 142)'
+const deepGold = 'rgb(154, 122, 58)'
 
 export const CoachOrb: FC<CoachOrbProps> = ({
   state,

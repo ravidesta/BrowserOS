@@ -167,6 +167,21 @@
   --animate-glow-once: glow-once 1.5s ease-out 1s forwards;
   /* Added shine animation for card hover highlight effect */
   --animate-shine: shine 0.8s ease-in-out;
+
+  /* Resonance OS — Atmosphere brand tokens */
+  --font-serif:
+    "Newsreader", "Source Serif 4", "Iowan Old Style", "Apple Garamond",
+    "Charter", "Cambria", "Liberation Serif", Georgia, serif;
+  --atm-bg: #fafaf8;
+  --atm-bg-dark: #0f1714;
+  --atm-ink: #122e21;
+  --atm-ink-mute: #5c7065;
+  --atm-sage: #d1e0d7;
+  --atm-gold: #c5a059;
+  --atm-gold-deep: #9a7a3a;
+  --atm-noise-opacity: 0.035;
+  --atm-blob-blur: 60px;
+  --atm-blob-opacity: 0.55;
 }
 
 @layer base {
@@ -424,6 +439,75 @@
 
   .animate-coach-orb-speak {
     animation: coach-orb-speak 1.4s ease-in-out infinite;
+  }
+
+  /* Resonance OS — Atmosphere: organic sage + gold blobs + paper grain. */
+  .atmosphere {
+    position: relative;
+    isolation: isolate;
+    background: var(--atm-bg);
+    color: var(--atm-ink);
+    overflow: hidden;
+  }
+  .dark .atmosphere {
+    background: var(--atm-bg-dark);
+    color: oklch(0.93 0 0);
+  }
+  .atmosphere::before,
+  .atmosphere::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(var(--atm-blob-blur));
+    opacity: var(--atm-blob-opacity);
+    pointer-events: none;
+    z-index: 0;
+    animation: atmosphere-drift 18s ease-in-out infinite alternate;
+  }
+  .atmosphere::before {
+    top: -25%;
+    left: -15%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, var(--atm-sage) 0%, transparent 70%);
+  }
+  .atmosphere::after {
+    bottom: -25%;
+    right: -10%;
+    width: 65%;
+    height: 65%;
+    background: radial-gradient(
+      circle,
+      color-mix(in oklab, var(--atm-gold) 50%, transparent) 0%,
+      transparent 70%
+    );
+    animation-delay: -6s;
+  }
+  .atmosphere > * {
+    position: relative;
+    z-index: 1;
+  }
+  .atmosphere-noise {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/></svg>");
+    opacity: var(--atm-noise-opacity);
+    mix-blend-mode: multiply;
+  }
+  .dark .atmosphere-noise {
+    mix-blend-mode: screen;
+    opacity: calc(var(--atm-noise-opacity) * 1.4);
+  }
+
+  @keyframes atmosphere-drift {
+    from {
+      transform: scale(1) translate(0, 0);
+    }
+    to {
+      transform: scale(1.08) translate(24px, 14px);
+    }
   }
 
   /* Collapsible animation utility classes */

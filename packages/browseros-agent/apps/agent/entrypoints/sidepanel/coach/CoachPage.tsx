@@ -60,11 +60,13 @@ export const CoachPage: FC = () => {
   }
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <header className="flex items-center justify-between border-border/40 border-b bg-background/80 px-3 py-2.5 backdrop-blur-md">
+    <div className="atmosphere flex h-full w-full flex-col">
+      <div className="atmosphere-noise" aria-hidden />
+      <header className="flex items-center justify-between border-border/40 border-b bg-background/40 px-3 py-2.5 backdrop-blur-md">
         <Link
           to="/"
-          className="font-semibold text-base text-foreground/90 hover:text-foreground"
+          className="text-2xl text-foreground/90 hover:text-foreground"
+          style={{ fontFamily: 'var(--font-serif)' }}
         >
           Coach
         </Link>
