@@ -101,7 +101,7 @@ export const office_status = defineOfficeTool({
 export const office_prepare_document = defineOfficeTool({
   name: 'office_prepare_document',
   description:
-    'Build an OnlyOffice editor config for a document so the BrowserOS Office Suite can open it. Returns a config object the extension passes directly to DocsAPI.DocEditor, signed with JWT when ONLYOFFICE_JWT_SECRET is configured. Call office_status first to confirm the suite is configured.',
+    'Build an OnlyOffice editor config for a document so the BrowserOS Office Suite can open it. Returns a config object plus a deepLink path. Surface deepLink to the user as a markdown link (e.g. `[Open "Title" in Office Suite](/office?config=...)`) so they can open the document in the Office Suite app. JWT-signed when ONLYOFFICE_JWT_SECRET is configured. Call office_status first to confirm the suite is configured.',
   input: z.object({
     documentUrl: z
       .string()
@@ -135,6 +135,7 @@ export const office_prepare_document = defineOfficeTool({
   output: z.object({
     config: z.unknown(),
     jwtSigned: z.boolean(),
+    deepLink: z.string(),
   }),
   handler: async (args, _ctx, response) => {
     const docServerUrl = getDocServerUrl()
@@ -181,11 +182,14 @@ export const office_prepare_document = defineOfficeTool({
       jwtSigned = true
     }
 
+    const encodedConfig = base64UrlEncode(JSON.stringify(config))
+    const deepLink = `/office?config=${encodedConfig}`
+
     response.text(
       jwtSigned
-        ? `Prepared editor config for "${args.title}" (${args.fileType}). Signed with JWT.`
-        : `Prepared editor config for "${args.title}" (${args.fileType}). WARNING: ONLYOFFICE_JWT_SECRET is not set, so the Document Server will receive unauthenticated requests.`,
+        ? `Prepared editor config for "${args.title}" (${args.fileType}). Signed with JWT.\nOpen with: ${deepLink}`
+        : `Prepared editor config for "${args.title}" (${args.fileType}). WARNING: ONLYOFFICE_JWT_SECRET is not set, so the Document Server will receive unauthenticated requests.\nOpen with: ${deepLink}`,
     )
-    response.data({ config, jwtSigned })
+    response.data({ config, jwtSigned, deepLink })
   },
 })
