@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BrowserOS Office Suite Host</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: transparent; }
+    #editor-placeholder { width: 100%; height: 100vh; }
+    .fallback {
+      color: #666;
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 40px;
+      text-align: center;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="editor-placeholder">
+    <div class="fallback">Waiting for editor configuration…</div>
+  </div>
+  <script>
+    (function () {
+      var editor = null;
+
+      function postToParent(msg) {
+        if (window.parent !== window) {
+          window.parent.postMessage(msg, '*');
+        }
+      }
+
+      function ensureScript(docServerUrl) {
+        return new Promise(function (resolve, reject) {
+          if (window.DocsAPI) { resolve(); return; }
+          var src = docServerUrl.replace(/\/+$/, '') + '/web-apps/apps/api/documents/api.js';
+          var script = document.createElement('script');
+          script.src = src;
+          script.async = true;
+          script.onload = function () { resolve(); };
+          script.onerror = function () {
+            reject(new Error('Failed to load OnlyOffice api.js from ' + src));
+          };
+          document.head.appendChild(script);
+        });
+      }
+
+      function mount(config, docServerUrl) {
+        return ensureScript(docServerUrl).then(function () {
+          if (editor) {
+            try { editor.destroyEditor(); } catch (e) { /* noop */ }
+            editor = null;
+          }
+          var placeholder = document.getElementById('editor-placeholder');
+          placeholder.innerHTML = '';
+          editor = new window.DocsAPI.DocEditor('editor-placeholder', config);
+        });
+      }
+
+      window.addEventListener('message', function (event) {
+        var data = event.data;
+        if (!data || typeof data !== 'object') return;
+        if (data.source !== 'browseros-office') return;
+        if (data.type !== 'init') return;
+        if (!data.config || !data.docServerUrl) return;
+
+        mount(data.config, data.docServerUrl).then(
+          function () {
+            postToParent({ source: 'browseros-office', type: 'mounted' });
+          },
+          function (err) {
+            postToParent({
+              source: 'browseros-office',
+              type: 'error',
+              message: (err && err.message) ? err.message : String(err)
+            });
+          }
+        );
+      });
+
+      postToParent({ source: 'browseros-office', type: 'ready' });
+    })();
+  </script>
+</body>
+</html>

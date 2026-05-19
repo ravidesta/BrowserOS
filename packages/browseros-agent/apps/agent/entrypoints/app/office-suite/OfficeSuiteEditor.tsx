@@ -1,26 +1,16 @@
-import { type FC, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { type FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { HUSHED_CUSTOMIZATION, getDocServerUrl } from './onlyoffice-config'
-import type { OnlyOfficeEditorConfig, OnlyOfficeEditorInstance } from './types'
+import type { OnlyOfficeEditorConfig } from './types'
 
-const SCRIPT_PATH = '/web-apps/apps/api/documents/api.js'
+const HOST_PAGE = '/onlyoffice-host.html'
 const SAMPLE_DOC_PATH = '/example/sample.docx'
 
-function loadOnlyOfficeScript(docServerUrl: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (window.DocsAPI) {
-      resolve()
-      return
-    }
-    const script = document.createElement('script')
-    script.src = `${docServerUrl}${SCRIPT_PATH}`
-    script.async = true
-    script.onload = () => resolve()
-    script.onerror = () =>
-      reject(new Error('Failed to load OnlyOffice editor script'))
-    document.head.appendChild(script)
-  })
+interface HostMessage {
+  source: 'browseros-office'
+  type: 'ready' | 'mounted' | 'error'
+  message?: string
 }
 
 function buildDefaultConfig(docServerUrl: string): OnlyOfficeEditorConfig {
@@ -38,8 +28,6 @@ function buildDefaultConfig(docServerUrl: string): OnlyOfficeEditorConfig {
       lang: 'en',
       customization: HUSHED_CUSTOMIZATION,
     },
-    width: '100%',
-    height: '100%',
   }
 }
 
@@ -54,9 +42,17 @@ function decodeConfigParam(
     const bytes = new Uint8Array(binary.length)
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
     const json = new TextDecoder().decode(bytes)
-    const parsed = JSON.parse(json) as OnlyOfficeEditorConfig
-    if (!parsed || typeof parsed !== 'object' || !parsed.document) return null
-    return parsed
+    const parsed = JSON.parse(json) as Partial<OnlyOfficeEditorConfig>
+    if (
+      !parsed ||
+      typeof parsed !== 'object' ||
+      !parsed.document ||
+      typeof parsed.document.url !== 'string' ||
+      typeof parsed.documentType !== 'string'
+    ) {
+      return null
+    }
+    return parsed as OnlyOfficeEditorConfig
   } catch {
     return null
   }
@@ -64,9 +60,7 @@ function decodeConfigParam(
 
 export const OfficeSuiteEditor: FC = () => {
   const [searchParams] = useSearchParams()
-  const rawId = useId()
-  const placeholderId = `onlyoffice_${rawId.replace(/:/g, '_')}`
-  const editorRef = useRef<OnlyOfficeEditorInstance | null>(null)
+  const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const docServerUrl = getDocServerUrl()
 
   const incomingConfig = useMemo(
@@ -77,37 +71,47 @@ export const OfficeSuiteEditor: FC = () => {
   const incomingTitle = incomingConfig?.document.title ?? null
 
   const [mounted, setMounted] = useState(autoMount)
-  const [error, setError] = useState<string | null>(null)
+  const [hostReady, setHostReady] = useState(false)
+  const [hostError, setHostError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!docServerUrl || !mounted) return
-    let cancelled = false
-
-    loadOnlyOfficeScript(docServerUrl)
-      .then(() => {
-        if (cancelled || !window.DocsAPI) return
-        const config: OnlyOfficeEditorConfig =
-          incomingConfig ?? buildDefaultConfig(docServerUrl)
-        if (!config.width) config.width = '100%'
-        if (!config.height) config.height = '100%'
-        editorRef.current = new window.DocsAPI.DocEditor(placeholderId, config)
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : String(err))
-        }
-      })
-
-    return () => {
-      cancelled = true
-      editorRef.current?.destroyEditor()
-      editorRef.current = null
+    if (!mounted) return
+    function onMessage(event: MessageEvent) {
+      const data = event.data as HostMessage | undefined
+      if (!data || data.source !== 'browseros-office') return
+      if (data.type === 'ready') {
+        setHostReady(true)
+        setHostError(null)
+      } else if (data.type === 'error') {
+        setHostError(data.message ?? 'Failed to mount editor')
+      } else if (data.type === 'mounted') {
+        setHostError(null)
+      }
     }
-  }, [docServerUrl, incomingConfig, mounted, placeholderId])
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [mounted])
+
+  useEffect(() => {
+    if (!hostReady || !docServerUrl) return
+    const iframe = iframeRef.current
+    if (!iframe?.contentWindow) return
+    const config: OnlyOfficeEditorConfig =
+      incomingConfig ?? buildDefaultConfig(docServerUrl)
+    iframe.contentWindow.postMessage(
+      {
+        source: 'browseros-office',
+        type: 'init',
+        config,
+        docServerUrl,
+      },
+      '*',
+    )
+  }, [hostReady, docServerUrl, incomingConfig])
 
   if (!docServerUrl) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
+      <div className="rounded-xl border border-border border-dashed bg-card p-10 text-center">
         <p className="font-medium text-base">Document Server not configured</p>
         <p className="mt-2 text-muted-foreground text-sm">
           Set{' '}
@@ -126,8 +130,9 @@ export const OfficeSuiteEditor: FC = () => {
       <div className="rounded-xl border border-border bg-card p-10 text-center">
         <p className="font-medium text-base">Open the editor</p>
         <p className="mt-2 mb-6 text-muted-foreground text-sm">
-          Loads OnlyOffice from your self-hosted Document Server. Connect an LLM
-          to edit and compose documents by voice or prompt.
+          Loads OnlyOffice from your self-hosted Document Server in a sandboxed
+          frame. Connect an LLM to edit and compose documents by voice or
+          prompt.
         </p>
         <Button onClick={() => setMounted(true)}>Open Editor</Button>
       </div>
@@ -142,11 +147,17 @@ export const OfficeSuiteEditor: FC = () => {
           <span className="font-medium text-foreground">{incomingTitle}</span>
         </div>
       ) : null}
-      {error ? (
-        <div className="p-10 text-center text-destructive text-sm">{error}</div>
-      ) : (
-        <div id={placeholderId} className="h-[80vh] w-full" />
-      )}
+      {hostError ? (
+        <div className="border-border border-b bg-destructive/10 px-4 py-2 text-destructive text-sm">
+          {hostError}
+        </div>
+      ) : null}
+      <iframe
+        ref={iframeRef}
+        src={HOST_PAGE}
+        title="OnlyOffice Editor"
+        className="block h-[80vh] w-full border-0"
+      />
     </div>
   )
 }

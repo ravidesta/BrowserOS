@@ -37,6 +37,16 @@ export default defineConfig({
         extension_ids: [LEGACY_AGENT_EXTENSION_ID],
       },
     ],
+    // The OnlyOffice editor loads its api.js from a self-hosted Document Server.
+    // MV3 forbids that from regular extension pages, so we run it inside a
+    // sandboxed page (opaque origin, relaxed CSP) and bridge to it via postMessage.
+    sandbox: {
+      pages: ['onlyoffice-host.html'],
+    },
+    content_security_policy: {
+      sandbox:
+        "sandbox allow-scripts allow-forms allow-modals; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; font-src * data:; connect-src *; frame-src *; child-src *;",
+    },
     chrome_url_overrides: {
       newtab: 'app.html',
     },
