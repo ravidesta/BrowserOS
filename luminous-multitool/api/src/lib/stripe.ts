@@ -88,3 +88,28 @@ export async function createConnectAccount(
     },
   })
 }
+
+export interface CreateSubscriptionCheckoutParams {
+  priceId: string
+  email: string
+  forgejoUserId: number
+  successUrl: string
+  cancelUrl: string
+}
+
+export async function createSubscriptionCheckout(
+  params: CreateSubscriptionCheckoutParams,
+): Promise<Stripe.Checkout.Session> {
+  const stripe = getStripe()
+  return stripe.checkout.sessions.create({
+    mode: 'subscription',
+    customer_email: params.email,
+    line_items: [{ price: params.priceId, quantity: 1 }],
+    success_url: params.successUrl,
+    cancel_url: params.cancelUrl,
+    metadata: { forgejo_user_id: String(params.forgejoUserId) },
+    subscription_data: {
+      metadata: { forgejo_user_id: String(params.forgejoUserId) },
+    },
+  })
+}

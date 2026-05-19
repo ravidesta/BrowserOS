@@ -1,8 +1,8 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { env } from '../env'
-import { sql } from '../lib/db'
+import { env, priceIdToTier } from '../env'
 import { calculateCommission } from '../lib/commission'
+import { sql } from '../lib/db'
 import {
   createCheckoutSession,
   createConnectAccount,
@@ -130,10 +130,7 @@ billing.post('/webhook', async (c) => {
       env.STRIPE_WEBHOOK_SECRET,
     )
   } catch (err) {
-    return c.text(
-      `Webhook signature failed: ${(err as Error).message}`,
-      400,
-    )
+    return c.text(`Webhook signature failed: ${(err as Error).message}`, 400)
   }
 
   switch (event.type) {
@@ -141,14 +138,17 @@ billing.post('/webhook', async (c) => {
       const session = event.data.object as {
         id: string
         payment_intent?: string | null
+        mode?: string
       }
-      await sql`
-        UPDATE deals SET
-          status = 'completed',
-          stripe_payment_intent_id = ${session.payment_intent ?? null},
-          completed_at = NOW()
-        WHERE stripe_checkout_session_id = ${session.id}
-      `
+      if (session.mode === 'payment') {
+        await sql`
+          UPDATE deals SET
+            status = 'completed',
+            stripe_payment_intent_id = ${session.payment_intent ?? null},
+            completed_at = NOW()
+          WHERE stripe_checkout_session_id = ${session.id}
+        `
+      }
       break
     }
     case 'checkout.session.expired': {
@@ -156,6 +156,54 @@ billing.post('/webhook', async (c) => {
       await sql`
         UPDATE deals SET status = 'expired'
         WHERE stripe_checkout_session_id = ${session.id} AND status = 'pending'
+      `
+      break
+    }
+    case 'customer.subscription.created':
+    case 'customer.subscription.updated': {
+      const sub = event.data.object as {
+        id: string
+        customer: string
+        status: string
+        items: { data: Array<{ price: { id: string } }> }
+        current_period_end: number
+        cancel_at_period_end: boolean
+        metadata: { forgejo_user_id?: string }
+      }
+      const forgejoUserId = sub.metadata?.forgejo_user_id
+        ? Number(sub.metadata.forgejo_user_id)
+        : null
+      if (!forgejoUserId) break
+      const priceId = sub.items.data[0]?.price.id
+      const tier = priceIdToTier(priceId)
+      const periodEnd = new Date(sub.current_period_end * 1000)
+      await sql`
+        INSERT INTO subscriptions (
+          forgejo_user_id, stripe_customer_id, stripe_subscription_id,
+          tier, status, current_period_end, cancel_at_period_end
+        ) VALUES (
+          ${forgejoUserId}, ${sub.customer}, ${sub.id},
+          ${tier}, ${sub.status}, ${periodEnd}, ${sub.cancel_at_period_end}
+        )
+        ON CONFLICT (forgejo_user_id) DO UPDATE SET
+          stripe_customer_id = EXCLUDED.stripe_customer_id,
+          stripe_subscription_id = EXCLUDED.stripe_subscription_id,
+          tier = EXCLUDED.tier,
+          status = EXCLUDED.status,
+          current_period_end = EXCLUDED.current_period_end,
+          cancel_at_period_end = EXCLUDED.cancel_at_period_end,
+          updated_at = NOW()
+      `
+      break
+    }
+    case 'customer.subscription.deleted': {
+      const sub = event.data.object as { id: string }
+      await sql`
+        UPDATE subscriptions SET
+          tier = 'free',
+          status = 'canceled',
+          updated_at = NOW()
+        WHERE stripe_subscription_id = ${sub.id}
       `
       break
     }

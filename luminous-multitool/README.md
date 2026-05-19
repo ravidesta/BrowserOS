@@ -15,11 +15,13 @@ already understand.
   PRs, wikis, CI — the works.
 - **Marketplace** where vendors sell software and services. Stripe Connect
   handles vendor payouts; we take our cut at the platform layer.
+- **Subscription billing** — $99/year and $299/month tiers with full Stripe
+  subscription lifecycle (checkout, webhooks, cancellation).
 - **Bitcoin timestamping** — every commit and deal artifact anchored to
   the Bitcoin blockchain via OpenTimestamps. Cryptographic proof of
   existence, legally admissible.
 - **AI concierge** — warm, intelligent assistant that drives the platform
-  on the user's behalf via an MCP-style tool surface.
+  on the user's behalf via an MCP-style tool surface. See `CONCIERGE.md`.
 
 ## Pricing
 
@@ -46,14 +48,26 @@ Wait about 30 seconds, then:
 - **Forgejo**: <http://localhost:3000> — first user becomes admin
 - **API**: <http://localhost:4000/health>
 
-### Wire up Forgejo → API webhooks (one-time, after first signup)
+## Production setup checklist
 
-In Forgejo: **Site Administration → Webhooks → Add Webhook**
-
-| Hook | URL | Event |
-|---|---|---|
-| Auto-create vendors | `http://api:4000/webhooks/forgejo/user-created` | User created |
-| Auto-stamp commits | `http://api:4000/webhooks/forgejo/push` | Push |
+1. **Forgejo first signup** — register an account; it becomes admin.
+2. **Generate Forgejo admin token** — Settings → Applications → Generate.
+   Set as `FORGEJO_ADMIN_TOKEN`.
+3. **Stripe account** — create at <https://dashboard.stripe.com>. Get the
+   secret key, webhook signing secret, and Connect client id.
+4. **Stripe subscription products** — create:
+   - "Luminous Annual" — $99/year recurring → copy the `price_xxx` id
+     into `STRIPE_PRICE_ANNUAL`
+   - "Luminous Pro" — $299/month recurring → copy into `STRIPE_PRICE_PRO`
+5. **Stripe webhook endpoint** — in Stripe dashboard, add:
+   `https://your-domain/billing/webhook`
+   Subscribe to events: `checkout.session.completed`,
+   `customer.subscription.created/updated/deleted`,
+   `checkout.session.expired`.
+6. **Forgejo webhooks** — Site Admin → Webhooks → Add:
+   - `http://api:4000/webhooks/forgejo/user-created` (User created)
+   - `http://api:4000/webhooks/forgejo/push` (Push)
+7. **Restart**: `docker compose down && docker compose up -d`
 
 ## API surface
 
@@ -67,8 +81,13 @@ In Forgejo: **Site Administration → Webhooks → Add Webhook**
 
 ### Billing (Stripe Connect)
 - `POST /billing/onboard` — create Express account, return onboarding URL
-- `POST /billing/checkout` — create Checkout Session with commission split
-- `POST /billing/webhook` — Stripe webhook receiver
+- `POST /billing/checkout` — create one-time Checkout with commission split
+- `POST /billing/webhook` — receives all Stripe events (subscriptions + payments)
+
+### Subscriptions ($99/yr, $299/mo)
+- `POST /subscriptions/checkout` — create subscription Checkout URL
+- `GET  /subscriptions/:forgejoUserId` — current tier + status
+- `POST /subscriptions/:forgejoUserId/cancel` — cancel at period end
 
 ### Commission
 - `POST /commission/preview` — calculate what a deal would cost
@@ -88,8 +107,7 @@ In Forgejo: **Site Administration → Webhooks → Add Webhook**
 - `GET  /concierge/tools` — list available tools
 - `POST /concierge/invoke/:tool` — call a tool by name
 
-Available tools: `list_marketplace_listings`, `get_listing`,
-`preview_commission`, `get_vendor_summary`, `stamp_artifact`.
+See `CONCIERGE.md` for integration with Claude / GPT / BrowserOS.
 
 ### Storage quota
 - `GET /quota/:username` — Forgejo storage used vs free-tier limit
@@ -104,50 +122,44 @@ Available tools: `list_marketplace_listings`, `get_listing`,
 luminous-multitool/
 ├── docker-compose.yml         # Forgejo + Postgres + API
 ├── .env.example
-├── forgejo/
-│   └── custom/                # Forgejo branding
+├── CONCIERGE.md               # LLM integration guide
+├── forgejo/custom/            # Forgejo branding
 └── api/                       # Bun + Hono backend
     ├── src/
     │   ├── index.ts           # Hono entrypoint
-    │   ├── env.ts             # config
-    │   ├── ui.ts              # HTML pages (home, pricing, marketplace, vendor, dashboard)
-    │   ├── lib/
-    │   │   ├── db.ts          # postgres.js client
-    │   │   ├── commission.ts  # 10/5/3/1% schedule + math
-    │   │   ├── forgejo.ts     # Forgejo API client
-    │   │   ├── stripe.ts      # Stripe Connect helpers
-    │   │   └── timestamp.ts   # OpenTimestamps wrapper
+    │   ├── env.ts             # config + tier mapping
+    │   ├── ui.ts              # HTML pages
+    │   ├── lib/{db,commission,forgejo,stripe,timestamp}.ts
     │   └── routes/
-    │       ├── marketplace.ts # listings CRUD
-    │       ├── vendors.ts     # vendor CRUD + dashboard JSON
-    │       ├── billing.ts     # Stripe webhook + checkout + onboarding
-    │       ├── commission.ts  # commission preview
-    │       ├── timestamps.ts  # stamp + verify
-    │       ├── concierge.ts   # MCP-style AI tool surface
-    │       ├── quota.ts       # storage tracking
-    │       └── webhooks.ts    # Forgejo → Luminous integration
+    │       ├── marketplace.ts
+    │       ├── vendors.ts
+    │       ├── billing.ts        # marketplace + subscription webhooks
+    │       ├── subscriptions.ts  # subscription checkout, cancel
+    │       ├── commission.ts
+    │       ├── timestamps.ts
+    │       ├── concierge.ts      # MCP-style AI surface
+    │       ├── quota.ts
+    │       └── webhooks.ts       # Forgejo → Luminous
     ├── migrations/
-    │   └── 0001_init.sql
-    └── tests/
-        └── commission.test.ts
+    │   ├── 0001_init.sql
+    │   └── 0002_subscriptions.sql
+    └── tests/commission.test.ts
 ```
 
 ## Status
 
-- [x] Phase 1: Forgejo deployable, branded
-- [x] Phase 1: Postgres schema (vendors, listings, deals, timestamps)
-- [x] Phase 1: API skeleton (Hono + postgres.js + Stripe SDK + OpenTimestamps)
-- [x] Phase 1: Commission engine (10/5/3/1% schedule, tested)
-- [x] Phase 2: Marketplace UI (home, pricing, listings grid, listing detail)
-- [x] Phase 2: Vendor onboarding flow (Stripe Connect Express)
-- [x] Phase 2: Buy now → Stripe Checkout with application_fee_amount
-- [x] Phase 3: Vendor dashboard (listings, payouts, stats)
-- [x] Phase 3: AI concierge MCP-style endpoint (5 tools)
-- [x] Phase 3: Forgejo webhook receiver (auto-vendor creation, auto-commit timestamping)
-- [x] Phase 3: Storage quota tracker
-- [ ] Phase 4: Subscription billing (Stripe products for $99/yr, $299/mo)
-- [ ] Phase 4: Video/audio communication (LiveKit integration)
-- [ ] Phase 4: Business plan / mockup / landing page tooling
+- [x] Phase 1: Forgejo deployable, branded, Postgres schema, API skeleton, commission engine
+- [x] Phase 2: Marketplace UI, vendor onboarding, Stripe Connect checkout
+- [x] Phase 3: Vendor dashboard, AI concierge (5 tools), Forgejo webhooks, storage quota
+- [x] Phase 4: Subscription billing ($99/yr + $299/mo), full Stripe subscription lifecycle, concierge integration doc
+- [ ] Phase 5: Video/audio communication (LiveKit)
+- [ ] Phase 5: Business plan / mockup / landing page tooling (AI-driven)
+- [ ] Phase 5: One-click GitHub repo migration UI (Forgejo's importer wrapped in a friendlier flow)
+
+**This is a complete v1 backend.** Everything that earns money is wired:
+subscription billing, marketplace, commission. Everything that
+differentiates is wired: bitcoin timestamps, AI concierge, branded git
+hosting. Phase 5 is product polish on top of a working foundation.
 
 ## License
 
