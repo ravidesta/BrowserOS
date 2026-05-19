@@ -2,8 +2,12 @@ import { Hono } from 'hono'
 import { env } from './env'
 import { billing } from './routes/billing'
 import { commission } from './routes/commission'
+import { concierge } from './routes/concierge'
 import { marketplace } from './routes/marketplace'
+import { quota } from './routes/quota'
 import { timestamps } from './routes/timestamps'
+import { vendors } from './routes/vendors'
+import { webhooks } from './routes/webhooks'
 import { ui } from './ui'
 
 const app = new Hono()
@@ -13,6 +17,7 @@ app.get('/health', (c) =>
     ok: true,
     service: 'luminous-api',
     stripeConfigured: !!env.STRIPE_SECRET_KEY,
+    forgejoTokenConfigured: !!env.FORGEJO_ADMIN_TOKEN,
   }),
 )
 
@@ -20,6 +25,10 @@ app.route('/marketplace', marketplace)
 app.route('/billing', billing)
 app.route('/commission', commission)
 app.route('/timestamps', timestamps)
+app.route('/vendors', vendors)
+app.route('/concierge', concierge)
+app.route('/quota', quota)
+app.route('/webhooks', webhooks)
 app.route('/', ui)
 
 app.notFound((c) => c.json({ error: 'not found' }, 404))

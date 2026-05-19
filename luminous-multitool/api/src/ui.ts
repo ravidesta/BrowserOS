@@ -55,7 +55,6 @@ function page(title: string, body: string): string {
   .hero .ctas { margin-top: 32px; display: flex; gap: 12px; flex-wrap: wrap; }
   .empty { text-align: center; padding: 80px 24px; color: #6b6862; }
   .row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-  .row > * { flex: 1; min-width: 200px; }
   label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: #6b6862; margin-bottom: 6px; }
   input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #e8e4dc; border-radius: 8px; font-family: inherit; font-size: 14px; background: white; color: #1a1815; }
   input:focus, textarea:focus, select:focus { outline: none; border-color: #C5A059; }
@@ -66,7 +65,16 @@ function page(title: string, body: string): string {
   .feature-grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin: 32px 0; }
   .feature h3 { font-size: 22px; margin-bottom: 8px; }
   .feature p { font-size: 14px; margin: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; background: white; border: 1px solid #e8e4dc; border-radius: 12px; overflow: hidden; }
+  th { text-align: left; padding: 12px 16px; background: #f0ede5; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b6862; font-weight: 600; }
+  td { padding: 12px 16px; border-top: 1px solid #f0ede5; font-size: 14px; }
+  pre { background: white; border: 1px solid #e8e4dc; border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; }
+  code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13px; background: #f0ede5; padding: 2px 6px; border-radius: 4px; }
   footer { padding: 48px 24px; text-align: center; color: #6b6862; font-size: 13px; border-top: 1px solid #e8e4dc; background: white; }
+  .stats-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin: 24px 0; }
+  .stat { background: white; border: 1px solid #e8e4dc; border-radius: 14px; padding: 24px; }
+  .stat .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b6862; margin-bottom: 8px; }
+  .stat .value { font-family: 'Cormorant Garamond', serif; font-size: 40px; color: #C5A059; line-height: 1; }
 </style>
 </head>
 <body>
@@ -93,8 +101,9 @@ function esc(s: string): string {
     .replace(/'/g, '&#39;')
 }
 
-function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`
+function formatPrice(cents: number | string | bigint): string {
+  const n = typeof cents === 'number' ? cents : Number(cents)
+  return `$${(n / 100).toFixed(2)}`
 }
 
 ui.get('/', (c) =>
@@ -143,7 +152,6 @@ ui.get('/pricing', (c) =>
 <div class="container">
   <h1>Pricing</h1>
   <p class="lead">Free like Microsoft. Paid when you need more.</p>
-
   <div class="pricing-table">
     <div class="tier">
       <h3>Free</h3>
@@ -157,7 +165,6 @@ ui.get('/pricing', (c) =>
       </ul>
       <a href="${env.FORGEJO_PUBLIC_URL}" class="btn secondary">Sign up</a>
     </div>
-
     <div class="tier">
       <h3>Annual</h3>
       <div class="amount">$99</div>
@@ -170,7 +177,6 @@ ui.get('/pricing', (c) =>
       </ul>
       <a href="/vendor" class="btn">Get Annual</a>
     </div>
-
     <div class="tier featured">
       <h3>Pro</h3>
       <div class="amount">$299</div>
@@ -186,7 +192,6 @@ ui.get('/pricing', (c) =>
       <a href="/vendor" class="btn">Get Pro</a>
     </div>
   </div>
-
   <h2>Marketplace commission</h2>
   <p>Enterprise deals only. Standard subscribers and their buyers pay zero on transactions.</p>
   <div class="pricing-table" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">
@@ -270,7 +275,6 @@ ui.get('/marketplace/:id', async (c) => {
   }
 
   const canCheckout = Boolean(listing.stripe_connect_account_id)
-  const baseUrl = env.FORGEJO_PUBLIC_URL.replace(/\/$/, '')
 
   return c.html(
     page(
@@ -295,8 +299,7 @@ ui.get('/marketplace/:id', async (c) => {
     var btn = document.getElementById('buy');
     if (!btn) return;
     btn.addEventListener('click', async function () {
-      btn.disabled = true;
-      btn.textContent = 'Loading…';
+      btn.disabled = true; btn.textContent = 'Loading…';
       try {
         var res = await fetch('/billing/checkout', {
           method: 'POST',
@@ -308,17 +311,14 @@ ui.get('/marketplace/:id', async (c) => {
           })
         });
         var data = await res.json();
-        if (data.checkoutUrl) {
-          window.location.href = data.checkoutUrl;
-        } else {
+        if (data.checkoutUrl) { window.location.href = data.checkoutUrl; }
+        else {
           document.getElementById('status').innerHTML = '<div class="status error">' + (data.error ? JSON.stringify(data.error) : 'Checkout failed') + '</div>';
-          btn.disabled = false;
-          btn.textContent = 'Buy now';
+          btn.disabled = false; btn.textContent = 'Buy now';
         }
       } catch (err) {
         document.getElementById('status').innerHTML = '<div class="status error">' + err.message + '</div>';
-        btn.disabled = false;
-        btn.textContent = 'Buy now';
+        btn.disabled = false; btn.textContent = 'Buy now';
       }
     });
     if (new URLSearchParams(window.location.search).get('paid') === 'true') {
@@ -338,11 +338,9 @@ ui.get('/vendor', (c) =>
 <div class="container narrow">
   <h1>Sell on Luminous</h1>
   <p class="lead">List software, services, or templates. Get paid via Stripe. We take zero commission on standard subscriber sales — only enterprise deals carry our declining 10/5/3/1% schedule.</p>
-
   <h2>1. Sign up &amp; create a vendor profile</h2>
-  <p>First, create your Luminous account on the Git host. We'll spin up your vendor profile automatically.</p>
+  <p>First, create your Luminous account on the Git host. We'll spin up your vendor profile automatically (via webhook).</p>
   <a href="${env.FORGEJO_PUBLIC_URL}user/sign_up" class="btn">Create account</a>
-
   <h2>2. Connect Stripe</h2>
   <p>Tell us where to send your payouts. Standard Stripe Express onboarding.</p>
   <form id="onboard-form">
@@ -357,10 +355,9 @@ ui.get('/vendor', (c) =>
     <div id="onboard-status"></div>
     <button type="submit" class="btn">Continue to Stripe</button>
   </form>
-
   <h2>3. List your first product</h2>
-  <p>Once you're connected, head to your vendor dashboard and add a listing. Or use the API directly:</p>
-  <pre style="background:white; border:1px solid #e8e4dc; border-radius:8px; padding:16px; overflow-x:auto; font-size:13px;">curl -X POST http://localhost:4000/marketplace/listings \\
+  <p>Once you're connected, head to your <a href="#dashboard">vendor dashboard</a> and add a listing. Or use the API directly:</p>
+  <pre>curl -X POST http://localhost:4000/marketplace/listings \\
   -H 'Content-Type: application/json' \\
   -d '{
     "vendorId": "&lt;your-vendor-id&gt;",
@@ -379,29 +376,145 @@ ui.get('/vendor', (c) =>
     status.innerHTML = '<div class="status">Creating Stripe account…</div>';
     try {
       var res = await fetch('/billing/onboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          vendorId: vendorId,
-          email: email,
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vendorId: vendorId, email: email,
           refreshUrl: window.location.href,
-          returnUrl: window.location.origin + '/vendor?onboarded=true'
+          returnUrl: window.location.origin + '/vendor/' + vendorId + '/dashboard'
         })
       });
       var data = await res.json();
-      if (data.onboardingUrl) {
-        window.location.href = data.onboardingUrl;
-      } else {
-        status.innerHTML = '<div class="status error">' + (data.error ? JSON.stringify(data.error) : 'Onboarding failed') + '</div>';
-      }
+      if (data.onboardingUrl) { window.location.href = data.onboardingUrl; }
+      else { status.innerHTML = '<div class="status error">' + (data.error ? JSON.stringify(data.error) : 'Onboarding failed') + '</div>'; }
     } catch (err) {
       status.innerHTML = '<div class="status error">' + err.message + '</div>';
     }
   });
-  if (new URLSearchParams(window.location.search).get('onboarded') === 'true') {
-    document.getElementById('onboard-status').innerHTML = '<div class="status ok">Stripe onboarding complete. You can now list products.</div>';
-  }
 </script>`,
     ),
   ),
 )
+
+ui.get('/vendor/:id/dashboard', async (c) => {
+  const vendorId = c.req.param('id')
+  const vendorRows = await sql<
+    {
+      id: string
+      display_name: string
+      stripe_connect_account_id: string | null
+      contract_start_at: string
+    }[]
+  >`SELECT id, display_name, stripe_connect_account_id, contract_start_at
+     FROM vendors WHERE id = ${vendorId} LIMIT 1`
+  const vendor = vendorRows[0]
+  if (!vendor) {
+    return c.html(
+      page(
+        'Not found',
+        `<div class="container narrow"><h1>Vendor not found</h1><p>Check the vendor id.</p></div>`,
+      ),
+      404,
+    )
+  }
+
+  const listings = await sql<
+    {
+      id: string
+      title: string
+      price_cents: number
+      active: boolean
+      is_enterprise: boolean
+    }[]
+  >`SELECT id, title, price_cents, active, is_enterprise
+     FROM listings WHERE vendor_id = ${vendorId}
+     ORDER BY created_at DESC LIMIT 100`
+
+  const deals = await sql<
+    {
+      id: string
+      amount_cents: number
+      commission_cents: number
+      vendor_payout_cents: number
+      status: string
+      completed_at: string | null
+      created_at: string
+      buyer_email: string | null
+    }[]
+  >`SELECT id, amount_cents, commission_cents, vendor_payout_cents,
+            status, completed_at, created_at, buyer_email
+     FROM deals WHERE vendor_id = ${vendorId} AND status = 'completed'
+     ORDER BY completed_at DESC LIMIT 50`
+
+  const totalRows = await sql<
+    {
+      gross_cents: string
+      payout_cents: string
+      deal_count: string
+    }[]
+  >`SELECT
+      COALESCE(SUM(amount_cents) FILTER (WHERE status = 'completed'), 0)::bigint AS gross_cents,
+      COALESCE(SUM(vendor_payout_cents) FILTER (WHERE status = 'completed'), 0)::bigint AS payout_cents,
+      COUNT(*) FILTER (WHERE status = 'completed') AS deal_count
+    FROM deals WHERE vendor_id = ${vendorId}`
+  const totals = totalRows[0] ?? {
+    gross_cents: '0',
+    payout_cents: '0',
+    deal_count: '0',
+  }
+
+  return c.html(
+    page(
+      `${vendor.display_name} — Dashboard`,
+      `
+<div class="container">
+  <p class="meta"><a href="/marketplace" style="color:#6b6862; text-decoration:none;">← Marketplace</a></p>
+  <h1>${esc(vendor.display_name)}</h1>
+  <p class="meta">Vendor ID <code>${esc(vendor.id)}</code></p>
+  ${!vendor.stripe_connect_account_id ? `<div class="status error"><strong>Stripe Connect not connected.</strong> Buyers can’t check out yet — <a href="/vendor">finish onboarding</a>.</div>` : ''}
+
+  <div class="stats-grid">
+    <div class="stat"><div class="label">Completed deals</div><div class="value">${totals.deal_count}</div></div>
+    <div class="stat"><div class="label">Gross revenue</div><div class="value">${formatPrice(totals.gross_cents)}</div></div>
+    <div class="stat"><div class="label">Your payouts</div><div class="value">${formatPrice(totals.payout_cents)}</div></div>
+  </div>
+
+  <h2>Listings (${listings.length})</h2>
+  ${
+    listings.length === 0
+      ? '<p>No listings yet. Use POST /marketplace/listings to add one.</p>'
+      : `<div class="grid">${listings
+          .map(
+            (l) => `
+        <div class="card">
+          <a class="title" href="/marketplace/${l.id}"><h3>${esc(l.title)}</h3></a>
+          <div class="price">${formatPrice(l.price_cents)}</div>
+          <div class="meta">${l.active ? 'Active' : 'Inactive'}${l.is_enterprise ? ' · Enterprise' : ''}</div>
+        </div>`,
+          )
+          .join('')}</div>`
+  }
+
+  <h2>Recent payouts</h2>
+  ${
+    deals.length === 0
+      ? '<p>No completed deals yet.</p>'
+      : `<table>
+          <thead><tr>
+            <th>Date</th><th>Buyer</th><th>Amount</th><th>Commission</th><th>Your payout</th>
+          </tr></thead>
+          <tbody>${deals
+            .map(
+              (d) => `<tr>
+              <td>${d.completed_at ? new Date(d.completed_at).toLocaleDateString() : '—'}</td>
+              <td>${d.buyer_email ? esc(d.buyer_email) : '—'}</td>
+              <td>${formatPrice(d.amount_cents)}</td>
+              <td>${formatPrice(d.commission_cents)}</td>
+              <td><strong>${formatPrice(d.vendor_payout_cents)}</strong></td>
+            </tr>`,
+            )
+            .join('')}</tbody>
+        </table>`
+  }
+</div>`,
+    ),
+  )
+})
