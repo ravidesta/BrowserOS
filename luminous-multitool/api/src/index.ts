@@ -4,6 +4,7 @@ import { billing } from './routes/billing'
 import { commission } from './routes/commission'
 import { marketplace } from './routes/marketplace'
 import { timestamps } from './routes/timestamps'
+import { ui } from './ui'
 
 const app = new Hono()
 
@@ -19,6 +20,7 @@ app.route('/marketplace', marketplace)
 app.route('/billing', billing)
 app.route('/commission', commission)
 app.route('/timestamps', timestamps)
+app.route('/', ui)
 
 app.notFound((c) => c.json({ error: 'not found' }, 404))
 app.onError((err, c) => {
