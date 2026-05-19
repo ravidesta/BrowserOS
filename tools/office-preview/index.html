@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BrowserOS Office Suite — Preview</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif; background: #f8f7f5; color: #1a1815; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 32px; }
+    h1 { font-family: "Cormorant Garamond", "Iowan Old Style", Georgia, serif; font-size: 36px; font-weight: 400; margin: 0 0 8px; letter-spacing: -0.01em; }
+    .subtitle { color: #6b6862; margin: 0 0 32px; font-size: 15px; }
+    .panel { background: white; border: 1px solid #e8e4dc; border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #6b6862; }
+    input, select { width: 100%; padding: 10px 12px; border: 1px solid #e8e4dc; border-radius: 8px; font-size: 14px; background: #f8f7f5; color: #1a1815; font-family: inherit; }
+    input:focus, select:focus { outline: none; border-color: #C5A059; background: white; }
+    button { padding: 10px 22px; background: #C5A059; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+    button:hover { background: #b08945; }
+    button.secondary { background: white; color: #1a1815; border: 1px solid #e8e4dc; }
+    button.secondary:hover { background: #f8f7f5; }
+    .editor-panel { background: white; border: 1px solid #e8e4dc; border-radius: 14px; overflow: hidden; height: 80vh; }
+    .editor-frame { width: 100%; height: 100%; border: 0; display: block; }
+    .empty-state { display: flex; align-items: center; justify-content: center; height: 100%; color: #6b6862; font-size: 14px; text-align: center; padding: 40px; }
+    .empty-state strong { color: #1a1815; font-weight: 600; }
+    .status { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; line-height: 1.4; }
+    .status.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .status.info { background: #f0f9ff; color: #075985; border: 1px solid #bae6fd; }
+    .status.ok { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .row { display: grid; grid-template-columns: 1fr 120px 120px auto; gap: 12px; align-items: end; }
+    @media (max-width: 720px) { .row { grid-template-columns: 1fr; } }
+    .deep-link { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; background: #f8f7f5; padding: 8px 10px; border-radius: 6px; word-break: break-all; margin-top: 8px; border: 1px solid #e8e4dc; }
+    code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; background: #f0ede5; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Office Suite — Preview</h1>
+    <p class="subtitle">Standalone preview of the OnlyOffice integration. Mirrors what the BrowserOS extension does, but runs in any browser — useful for verifying the docserver wiring before building the extension.</p>
+
+    <div class="panel">
+      <div class="field">
+        <label for="docserver">OnlyOffice Document Server URL</label>
+        <input id="docserver" type="url" placeholder="http://localhost:8080" value="http://localhost:8080">
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="document-url">Document URL (reachable from the docserver)</label>
+          <input id="document-url" type="url" placeholder="http://localhost:8080/example/sample.docx" value="http://localhost:8080/example/sample.docx">
+        </div>
+        <div class="field">
+          <label for="file-type">Type</label>
+          <select id="file-type">
+            <option value="docx">docx</option>
+            <option value="xlsx">xlsx</option>
+            <option value="pptx">pptx</option>
+            <option value="pdf">pdf</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="mode">Mode</label>
+          <select id="mode">
+            <option value="edit">edit</option>
+            <option value="view">view</option>
+          </select>
+        </div>
+        <button id="open-btn">Open Editor</button>
+      </div>
+    </div>
+
+    <div id="status-container"></div>
+
+    <div class="editor-panel">
+      <div id="editor-placeholder" class="empty-state">
+        Set the document server URL and click <strong style="margin: 0 6px;">Open Editor</strong> to load OnlyOffice.<br><br>
+        With the bundled docker-compose, the docserver lives at <code>http://localhost:8080</code> and ships sample docs at <code>/example/</code>.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var editor = null;
+      var FILE_TYPE_MAP = { docx: 'word', xlsx: 'cell', pptx: 'slide', pdf: 'pdf' };
+
+      function setStatus(msg, kind) {
+        var c = document.getElementById('status-container');
+        c.innerHTML = msg ? '<div class="status ' + (kind || 'info') + '">' + msg + '</div>' : '';
+      }
+
+      function ensureScript(docServerUrl) {
+        return new Promise(function (resolve, reject) {
+          if (window.DocsAPI) { resolve(); return; }
+          var src = docServerUrl.replace(/\/+$/, '') + '/web-apps/apps/api/documents/api.js';
+          var script = document.createElement('script');
+          script.src = src;
+          script.async = true;
+          script.onload = function () { resolve(); };
+          script.onerror = function () {
+            reject(new Error('Failed to load api.js from ' + src + '. Is the Document Server running?'));
+          };
+          document.head.appendChild(script);
+        });
+      }
+
+      function buildConfig(docUrl, fileType, title, mode) {
+        return {
+          documentType: FILE_TYPE_MAP[fileType],
+          document: {
+            fileType: fileType,
+            key: 'preview-' + Date.now(),
+            title: title,
+            url: docUrl,
+            permissions: { edit: mode === 'edit', download: true }
+          },
+          editorConfig: {
+            mode: mode,
+            lang: 'en',
+            customization: {
+              compactHeader: true,
+              compactToolbar: true,
+              toolbarHideFileName: true,
+              hideRightMenu: true,
+              hideRulers: true,
+              integrationMode: 'embed',
+              feedback: false,
+              help: false,
+              plugins: false,
+              chat: false,
+              comments: false,
+              autosave: true,
+              forcesave: false,
+              uiTheme: 'theme-light'
+            }
+          }
+        };
+      }
+
+      document.getElementById('open-btn').addEventListener('click', function () {
+        setStatus('', null);
+        var docServer = document.getElementById('docserver').value.trim();
+        var docUrl = document.getElementById('document-url').value.trim();
+        var fileType = document.getElementById('file-type').value;
+        var mode = document.getElementById('mode').value;
+        var title = (docUrl.split('/').pop() || 'document.' + fileType).split('?')[0];
+
+        if (!docServer || !docUrl) {
+          setStatus('Enter both a Document Server URL and a Document URL.', 'error');
+          return;
+        }
+
+        setStatus('Loading OnlyOffice api.js from ' + docServer + '…', 'info');
+
+        ensureScript(docServer).then(function () {
+          if (editor) {
+            try { editor.destroyEditor(); } catch (e) { /* noop */ }
+            editor = null;
+          }
+          var placeholder = document.getElementById('editor-placeholder');
+          placeholder.innerHTML = '';
+          placeholder.className = '';
+          editor = new window.DocsAPI.DocEditor('editor-placeholder', buildConfig(docUrl, fileType, title, mode));
+          setStatus('Editor mounted. Document Server: ' + docServer, 'ok');
+        }).catch(function (err) {
+          setStatus(err.message || String(err), 'error');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+# Luminous Multitool — full stack
+#
+# Bring up:   docker compose up -d
+# Logs:       docker compose logs -f
+# Tear down:  docker compose down       (volumes preserved)
+#             docker compose down -v    (nuke volumes)
+
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:9
+    container_name: luminous-forgejo
+    restart: unless-stopped
+    environment:
+      USER_UID: 1000
+      USER_GID: 1000
+      FORGEJO__database__DB_TYPE: postgres
+      FORGEJO__database__HOST: db:5432
+      FORGEJO__database__NAME: ${POSTGRES_DB}
+      FORGEJO__database__USER: ${POSTGRES_USER}
+      FORGEJO__database__PASSWD: ${POSTGRES_PASSWORD}
+      FORGEJO__server__DOMAIN: ${LUMINOUS_DOMAIN}
+      FORGEJO__server__ROOT_URL: ${LUMINOUS_ROOT_URL}
+      FORGEJO__server__SSH_DOMAIN: ${LUMINOUS_DOMAIN}
+      FORGEJO__server__SSH_PORT: ${LUMINOUS_SSH_PORT}
+      FORGEJO__mailer__ENABLED: "false"
+      FORGEJO__service__DISABLE_REGISTRATION: "false"
+      FORGEJO__service__REQUIRE_SIGNIN_VIEW: "false"
+    volumes:
+      - forgejo-data:/data
+      - ./forgejo/custom:/data/gitea/custom:ro
+    ports:
+      - "${LUMINOUS_HTTP_PORT}:3000"
+      - "${LUMINOUS_SSH_PORT}:22"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ./api
+    container_name: luminous-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      API_PORT: 4000
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      FORGEJO_INTERNAL_URL: http://forgejo:3000
+      FORGEJO_PUBLIC_URL: ${LUMINOUS_ROOT_URL}
+      FORGEJO_ADMIN_TOKEN: ${FORGEJO_ADMIN_TOKEN}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      STRIPE_CONNECT_CLIENT_ID: ${STRIPE_CONNECT_CLIENT_ID}
+      OTS_CALENDAR_URL: ${OTS_CALENDAR_URL}
+    ports:
+      - "${LUMINOUS_API_PORT}:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+      forgejo:
+        condition: service_started
+
+  db:
+    image: postgres:16-alpine
+    container_name: luminous-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./api/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  forgejo-data:
+  postgres-data:

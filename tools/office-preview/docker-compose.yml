@@ -1,0 +1,45 @@
+# OnlyOffice Document Server + a tiny static server for the preview app.
+#
+# Bring it up:
+#   docker compose up -d
+#
+# Then open http://localhost:3000 in your browser, click "Open Editor".
+#
+# Tear it down:
+#   docker compose down       # keeps volumes
+#   docker compose down -v    # also nukes volumes
+
+services:
+  docserver:
+    image: onlyoffice/documentserver:latest
+    container_name: browseros-office-docserver
+    ports:
+      - "8080:80"
+    environment:
+      # Dev-only. Flip JWT_ENABLED to "true" and set JWT_SECRET to test the
+      # signed-config flow with the office_prepare_document MCP tool.
+      JWT_ENABLED: "false"
+      JWT_SECRET: ""
+    volumes:
+      - docserver-data:/var/www/onlyoffice/Data
+      - docserver-log:/var/log/onlyoffice
+      - docserver-lib:/var/lib/onlyoffice
+      - docserver-db:/var/lib/postgresql
+    restart: unless-stopped
+
+  preview:
+    image: nginx:alpine
+    container_name: browseros-office-preview
+    ports:
+      - "3000:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+    depends_on:
+      - docserver
+    restart: unless-stopped
+
+volumes:
+  docserver-data:
+  docserver-log:
+  docserver-lib:
+  docserver-db:
