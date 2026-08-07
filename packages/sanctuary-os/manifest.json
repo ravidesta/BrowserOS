@@ -1,0 +1,78 @@
+{
+  "manifest_version": 3,
+  "name": "Sanctuary OS",
+  "version": "1.0.0",
+  "description": "Radical calmness for the whole web. Living cream surfaces that breathe on a 20-second cycle, Cormorant Garamond and Manrope, and SVG confetti.",
+  "default_locale": "en",
+  "minimum_chrome_version": "111",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "32": "assets/icons/icon-32.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "Sanctuary OS",
+    "default_popup": "src/popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon-16.png",
+      "32": "assets/icons/icon-32.png",
+      "48": "assets/icons/icon-48.png",
+      "128": "assets/icons/icon-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "run_at": "document_start",
+      "all_frames": false,
+      "css": [
+        "src/tokens.css",
+        "src/fonts.css",
+        "src/typography.css",
+        "src/surfaces.css"
+      ],
+      "js": [
+        "src/confetti.js",
+        "src/lexicon.js",
+        "src/content.js"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/fonts/*.woff2",
+        "src/overlay.css"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "commands": {
+    "toggle-sanctuary": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "Toggle Sanctuary OS"
+    },
+    "celebrate": {
+      "suggested_key": {
+        "default": "Alt+Shift+C"
+      },
+      "description": "Celebrate"
+    }
+  }
+}
