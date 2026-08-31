@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sanctuary OS</title>
+    <link rel="stylesheet" href="tokens.css" />
+    <link rel="stylesheet" href="fonts.css" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <!-- The popup is built in the system it ships. Same tokens, same two
+         voices, same breathing blooms — if the design language cannot hold its
+         own control panel, it isn't a design language yet. -->
+    <div class="atmosphere" aria-hidden="true">
+      <span class="bloom b1"></span>
+      <span class="bloom b2"></span>
+      <span class="bloom b3"></span>
+      <span class="grain"></span>
+    </div>
+
+    <header class="masthead">
+      <p class="eyebrow" id="phase-label">Zenith &middot; Midday</p>
+      <h1>Sanctuary</h1>
+      <p class="subtitle">Designed for the exhale.</p>
+    </header>
+
+    <main>
+      <section class="row row--primary">
+        <div class="row-text">
+          <span class="row-title">Sanctuary</span>
+          <span class="row-note" id="site-note">Everywhere</span>
+        </div>
+        <button
+          class="switch"
+          id="enabled"
+          role="switch"
+          aria-checked="true"
+          aria-label="Sanctuary on or off"
+        >
+          <span class="knob"></span>
+        </button>
+      </section>
+
+      <section class="row">
+        <div class="row-text">
+          <span class="row-title">This site</span>
+          <span class="row-note" id="host-name">&mdash;</span>
+        </div>
+        <button
+          class="switch"
+          id="site"
+          role="switch"
+          aria-checked="true"
+          aria-label="Sanctuary on this site"
+        >
+          <span class="knob"></span>
+        </button>
+      </section>
+
+      <hr />
+
+      <section class="field">
+        <p class="eyebrow">The Arc of the Sun</p>
+        <div class="segmented" id="phaseMode" role="radiogroup" aria-label="Phase">
+          <button role="radio" data-value="auto">Auto</button>
+          <button role="radio" data-value="ascend">Ascend</button>
+          <button role="radio" data-value="zenith">Zenith</button>
+          <button role="radio" data-value="descent">Descent</button>
+          <button role="radio" data-value="rest">Rest</button>
+        </div>
+      </section>
+
+      <section class="field">
+        <p class="eyebrow">Typographic Harmony</p>
+        <div class="segmented" id="voice" role="radiogroup" aria-label="Voice">
+          <button role="radio" data-value="two">Two Voices</button>
+          <button role="radio" data-value="narrative">Narrative</button>
+          <button role="radio" data-value="off">Off</button>
+        </div>
+        <p class="hint" id="voice-hint">
+          Cormorant for meaning, Manrope for wayfinding.
+        </p>
+      </section>
+
+      <section class="field">
+        <p class="eyebrow">Materiality</p>
+        <div class="segmented" id="intensity" role="radiogroup" aria-label="Intensity">
+          <button role="radio" data-value="soft">Soft</button>
+          <button role="radio" data-value="full">Full</button>
+          <button role="radio" data-value="dream">Dream</button>
+        </div>
+        <p class="hint" id="intensity-hint">
+          The ground comes through. Containers lift. Controls rebuilt.
+        </p>
+      </section>
+
+      <hr />
+
+      <section class="row">
+        <div class="row-text">
+          <span class="row-title">Living surfaces</span>
+          <span class="row-note">Grade, grain, and the 20&#8209;second breath</span>
+        </div>
+        <button class="switch" id="surfaces" role="switch" aria-checked="true">
+          <span class="knob"></span>
+        </button>
+      </section>
+
+      <section class="row">
+        <div class="row-text">
+          <span class="row-title">Radical calmness</span>
+          <span class="row-note">Quiets blinking badges and urgent alerts</span>
+        </div>
+        <button class="switch" id="calm" role="switch" aria-checked="true">
+          <span class="knob"></span>
+        </button>
+      </section>
+
+      <section class="row">
+        <div class="row-text">
+          <span class="row-title">The Lexicon</span>
+          <span class="row-note">Plant a Seed &middot; Energy Required &middot; Luminize</span>
+        </div>
+        <button class="switch" id="lexicon" role="switch" aria-checked="false">
+          <span class="knob"></span>
+        </button>
+      </section>
+
+      <hr />
+
+      <section class="row">
+        <div class="row-text">
+          <span class="row-title">Confetti</span>
+          <span class="row-note">SVG petals, seeds, and sparks</span>
+        </div>
+        <button class="switch" id="confetti" role="switch" aria-checked="true">
+          <span class="knob"></span>
+        </button>
+      </section>
+
+      <section class="row">
+        <div class="row-text">
+          <span class="row-title">Arrival burst</span>
+          <span class="row-note">A quiet drift on every page load</span>
+        </div>
+        <button class="switch" id="welcomeBurst" role="switch" aria-checked="true">
+          <span class="knob"></span>
+        </button>
+      </section>
+
+      <section class="row">
+        <div class="row-text">
+          <span class="row-title">Bloom on click</span>
+          <span class="row-note">Every tap throws a small handful</span>
+        </div>
+        <button class="switch" id="clickBloom" role="switch" aria-checked="false">
+          <span class="knob"></span>
+        </button>
+      </section>
+
+      <button class="celebrate" id="celebrate">Celebrate</button>
+
+      <p class="shortcuts">
+        <span>Alt&#8202;+&#8202;Shift&#8202;+&#8202;S</span> toggle
+        &nbsp;&middot;&nbsp;
+        <span>Alt&#8202;+&#8202;Shift&#8202;+&#8202;C</span> celebrate
+      </p>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

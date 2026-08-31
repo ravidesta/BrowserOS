@@ -1,0 +1,259 @@
+/* ============================================================================
+   SANCTUARY OS — Typographic Harmony
+   ----------------------------------------------------------------------------
+   "Cormorant Garamond — The Narrative Voice. Manrope — The Structural Voice."
+
+   Two voices, and the whole craft is in the boundary between them. Narrative
+   carries meaning: prose, headings, quotation, the things a person reads to
+   understand something. Structural carries wayfinding: navigation, metadata,
+   badges, controls, the things a person reads to locate themselves. Give both
+   jobs to one typeface and you have no hierarchy — just a mood.
+
+   Voice modes, set on <html> by content.js:
+     two        Narrative + Structural, per the brief. Default.
+     narrative  Cormorant on everything, for when the whole web should be a
+                manuscript. (This is the literal reading of "everything in
+                Cormorant Garamond" — kept, because sometimes that IS the ask.)
+     off        No typographic change at all.
+
+   ----------------------------------------------------------------------------
+   THE GUARD
+   ---------
+   Every rule below carries a long `:not(...)`. That list is the entire
+   difference between a page dressed in Garamond and a page full of tofu boxes.
+
+   Icon fonts — Font Awesome, Material Symbols, Octicons, Bootstrap Icons, Ant
+   Design, and a thousand bespoke `iconfont` builds — are fonts. A blunt
+   `* { font-family: serif !important }` retypesets their Private Use Area
+   codepoints in a face that has no glyphs there, and the site's navigation
+   turns into small rectangles of regret.
+
+   So the guard is not a nicety, it is the feature. Anything that smells like
+   an icon simply never receives a declaration from us, which means the site's
+   own `.fa { font-family: "Font Awesome 6 Free" }` keeps applying, untouched,
+   through ordinary cascade. We don't fight it — we decline to enter the room.
+
+   The `i` flag (`[class*="icon" i]`) catches icon, Icon, ICON, and
+   myIconWrapper in one selector. content.js adds `[data-sanc-keepfont]` at
+   runtime for the ones whose class names give nothing away and are only
+   detectable by sniffing the glyph their `::before` resolves to.
+   ========================================================================== */
+
+/* --- Everything that is language starts Narrative ----------------------- */
+html[data-sanctuary-voice]:not([data-sanctuary-voice="off"]) *:not(
+    [data-sanc-keepfont],
+    [data-icon],
+    [class*="icon" i],
+    [class*="symbol" i],
+    [class*="glyph" i],
+    [class*="emoji" i],
+    .fa, .fas, .far, .fal, .fab, .fad, .fak,
+    .fa-solid, .fa-regular, .fa-brands, .fa-light, .fa-duotone,
+    [class^="fa-"], [class*=" fa-"],
+    [class^="bi-"], [class*=" bi-"],
+    [class^="ti-"], [class*=" ti-"],
+    i:empty, span:empty, em:empty, b:empty,
+    svg, svg *, math, math *,
+    img, canvas, video, iframe, object, embed
+  ) {
+  font-family: var(--sanc-voice-narrative) !important;
+  font-optical-sizing: auto;
+}
+
+html[data-sanctuary-voice]:not([data-sanctuary-voice="off"]) body {
+  font-weight: var(--sanc-w-body);
+  line-height: var(--sanc-lh-body);
+  letter-spacing: var(--sanc-track-body);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures contextual;
+}
+
+/* --- Display: headings at true Cormorant proportion ---------------------
+   No x-height crutch up here. Above ~32px the typeface can simply be itself:
+   long extenders, open counters, tracking pulled slightly tight because large
+   serif text always sets loose by default. */
+html[data-sanctuary-voice]:not([data-sanctuary-voice="off"]) :is(h1, h2, h3, h4, h5, h6):not(
+    [data-sanc-keepfont], [class*="icon" i], [class*="symbol" i]
+  ) {
+  font-family: var(--sanc-voice-narrative-display) !important;
+  font-weight: var(--sanc-w-medium);
+  line-height: var(--sanc-lh-tight);
+  letter-spacing: var(--sanc-track-display);
+  color: var(--sanc-ink);
+}
+
+html[data-sanctuary-voice]:not([data-sanctuary-voice="off"]) :is(h1, h2) {
+  font-weight: var(--sanc-w-air);
+}
+
+html[data-sanctuary-voice]:not([data-sanctuary-voice="off"]) :is(h5, h6) {
+  line-height: var(--sanc-lh-snug);
+  letter-spacing: 0.01em;
+}
+
+/* ==========================================================================
+   THE STRUCTURAL VOICE
+   Navigation, metadata, controls, counters — everything a person reads to
+   locate themselves rather than to understand something.
+   ========================================================================== */
+html[data-sanctuary-voice="two"] :is(
+    nav, nav *, [role="navigation"], [role="navigation"] *,
+    [role="tablist"], [role="tab"], [role="menubar"], [role="menuitem"],
+    [role="toolbar"], [role="status"],
+    footer, footer *,
+    [class*="nav" i], [class*="menu" i], [class*="breadcrumb" i],
+    [class*="crumb" i], [class*="tab" i], [class*="toolbar" i],
+    [class*="sidebar" i], [class*="badge" i], [class*="chip" i],
+    [class*="pill" i], [class*="tag" i], [class*="meta" i],
+    [class*="timestamp" i], [class*="byline" i], [class*="eyebrow" i],
+    [class*="overline" i], [class*="kicker" i], [class*="label" i],
+    [class*="btn" i], [class*="button" i], [class*="counter" i],
+    button, [role="button"], input, select, textarea, label, legend,
+    optgroup, option, th, thead, thead *, time, small, kbd, abbr
+  ):not(
+    [data-sanc-keepfont],
+    [data-icon],
+    [class*="icon" i],
+    [class*="symbol" i],
+    [class*="glyph" i],
+    [class*="emoji" i],
+    .fa, .fas, .far, .fal, .fab, .fad, .fak,
+    [class^="fa-"], [class*=" fa-"],
+    [class^="bi-"], [class*=" bi-"],
+    i:empty, span:empty,
+    svg, svg *, img, canvas, video, iframe
+  ) {
+  font-family: var(--sanc-voice-structural) !important;
+  font-weight: var(--sanc-w-medium);
+  letter-spacing: 0.005em;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* --- Editorial hierarchy: the structural voice tracked out in uppercase --
+   "Geometric, clear, and tracks beautifully in uppercase." This is the single
+   move that makes metadata read as editorial instead of as a form label.
+
+   Deliberately NOT applied to `label` or nav links: uppercase is gorgeous on
+   ENERGY REQUIRED and hostile on a two-line field description. */
+html[data-sanctuary-voice="two"] :is(
+    [class*="badge" i], [class*="chip" i], [class*="pill" i], [class*="tag" i],
+    [class*="eyebrow" i], [class*="overline" i], [class*="kicker" i],
+    th, legend, caption, [role="tab"]
+  ):not([class*="icon" i], [data-sanc-keepfont], :empty) {
+  font-family: var(--sanc-voice-structural) !important;
+  text-transform: uppercase;
+  letter-spacing: var(--sanc-track-structural);
+  font-size: 0.8em;
+  font-weight: var(--sanc-w-medium);
+  color: var(--sanc-ink-3);
+}
+
+/* --- Prose reclaims itself ----------------------------------------------
+   A paragraph inside `<div class="content-label-wrap">` is still a paragraph.
+   The extra attribute on the prefix outranks the structural rule so real
+   prose can never be conscripted into the metadata layer by an unlucky class
+   name upstream of it. */
+html[data-sanctuary][data-sanctuary-voice="two"] :is(
+    article, [role="article"], main, [class*="prose" i], [class*="article" i],
+    [class*="post" i], [class*="entry" i], [class*="story" i]
+  )
+  :is(p, li, dd, h1, h2, h3, h4, h5, h6):not(
+    [data-sanc-keepfont], [class*="icon" i], [class*="badge" i],
+    [class*="tag" i], [class*="meta" i], nav *
+  ) {
+  font-family: var(--sanc-voice-narrative) !important;
+  text-transform: none;
+  letter-spacing: var(--sanc-track-body);
+}
+
+html[data-sanctuary][data-sanctuary-voice="two"] :is(
+    article, [role="article"], main, [class*="prose" i], [class*="article" i]
+  )
+  :is(h1, h2, h3, h4, h5, h6):not([data-sanc-keepfont], [class*="icon" i], nav *) {
+  font-family: var(--sanc-voice-narrative-display) !important;
+  letter-spacing: var(--sanc-track-display);
+}
+
+/* --- Code keeps its monospace, and so does everything inside it ----------
+   The `[data-sanctuary]` in the prefix is load-bearing, not decoration. The
+   base rule above ends in `:not(<the whole guard>)`, and a `:not()` inherits
+   the specificity of its most specific argument — so that rule scores a class
+   column of 3 despite selecting `*`. Without the extra attribute here, the
+   monospace rule loses the cascade to it and every code sample on the web
+   quietly becomes Garamond. Caught by the test fixture, not by reading. */
+html[data-sanctuary][data-sanctuary-voice]:not([data-sanctuary-voice="off"]) :is(code, pre, kbd, samp, var, tt),
+html[data-sanctuary][data-sanctuary-voice]:not([data-sanctuary-voice="off"]) :is(code, pre, samp, var) *:not(
+    [data-sanc-keepfont], [class*="icon" i], svg, svg *
+  ) {
+  font-family: var(--sanc-voice-mono) !important;
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* --- Figures ------------------------------------------------------------
+   Oldstyle numerals sit on the baseline with ascenders and descenders, like
+   lowercase letters. Correct in a sentence, wrong in a column — which is why
+   tables, inputs, and time carry lining tabular figures instead. */
+html[data-sanctuary-voice]:not([data-sanctuary-voice="off"])
+  :is(p, li, blockquote, dd, figcaption, article) {
+  font-variant-numeric: oldstyle-nums proportional-nums;
+}
+
+html[data-sanctuary-voice]:not([data-sanctuary-voice="off"])
+  :is(table, td, th, input, output, time, [class*="price" i], [class*="count" i]) {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* --- Emphasis -----------------------------------------------------------
+   Cormorant's bold is gentler than a sans bold, so it takes a little more
+   weight and a hair of tracking to hold its own beside surrounding text. */
+html[data-sanctuary-voice]:not([data-sanctuary-voice="off"]) :is(strong, b) {
+  font-weight: var(--sanc-w-bold);
+  letter-spacing: 0.004em;
+}
+
+html[data-sanctuary-voice]:not([data-sanctuary-voice="off"])
+  :is(em, i):not(:empty, [class*="icon" i], [class^="fa-"], [class*=" fa-"]) {
+  font-style: italic;
+  font-synthesis-style: none;
+}
+
+/* --- Quotation: the one place the narrative voice gets to show off ------ */
+html[data-sanctuary-voice]:not([data-sanctuary-voice="off"])[data-sanctuary-surfaces="on"] blockquote {
+  font-family: var(--sanc-voice-narrative-display) !important;
+  font-size: 1.2em;
+  font-style: italic;
+  font-weight: var(--sanc-w-air);
+  line-height: var(--sanc-lh-snug);
+  color: var(--sanc-ink-2);
+  border-left: 2px solid var(--sanc-accent);
+  padding-left: var(--sanc-s-4);
+  margin-left: 0;
+}
+
+/* --- Placeholders whisper ----------------------------------------------- */
+html[data-sanctuary-voice]:not([data-sanctuary-voice="off"]) ::placeholder {
+  font-family: var(--sanc-voice-structural) !important;
+  font-weight: var(--sanc-w-air);
+  color: var(--sanc-ink-4);
+  opacity: 1;
+}
+
+/* --- Dream intensity: the versal ---------------------------------------
+   Reserved for the highest setting, because a drop cap on a live web app is
+   either sublime or a bug report, and the difference is whether you asked. */
+html[data-sanctuary-voice]:not([data-sanctuary-voice="off"])[data-sanctuary-intensity="dream"]
+  :is(article, [role="article"], [class*="post" i], [class*="entry" i], main > section)
+  > p:first-of-type::first-letter {
+  font-family: var(--sanc-voice-narrative-display);
+  float: left;
+  font-size: 3.5em;
+  line-height: 0.82;
+  font-weight: var(--sanc-w-air);
+  padding: 0.06em 0.1em 0 0;
+  color: var(--sanc-accent-deep);
+}

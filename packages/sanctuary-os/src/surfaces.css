@@ -1,0 +1,421 @@
+/* ============================================================================
+   SANCTUARY OS — Materiality
+   ----------------------------------------------------------------------------
+   "Flat surfaces and sacred containers." "Designed for the exhale."
+
+   Three intensities, because one setting cannot be right for both a longform
+   essay and a trading dashboard, and pretending otherwise is how a tool gets
+   uninstalled on day two.
+
+     soft   Grade only. Nothing structural is touched — the atmosphere warms
+            the page from above and everything else stays exactly where the
+            site put it. Safe on brand-critical UI, safe on the thing you are
+            about to demo.
+
+     full   The substrate comes through. Opaque containers go transparent so
+            the phase's ground becomes the page's actual floor, containers
+            lift onto surface, controls are rebuilt in the system. Default.
+
+     dream  Full, plus the indulgences: warmed imagery, deeper blooms, drop
+            caps, heavier glass. For reading, for writing, for a Sunday.
+
+   The de-whitening in `full` is deliberately broad. Making every structural
+   container transparent is the only way a substrate can actually be a
+   substrate — anything subtler leaves a thousand white rectangles floating on
+   the ground, which reads as a broken page rather than a calm one. Media,
+   canvases, frames, and anything carrying an inline background image are left
+   strictly alone.
+   ========================================================================== */
+
+html[data-sanctuary-intensity="soft"] {
+  --sanc-atmos-grade: 0.18;
+  --sanc-atmos-grain: 0.028;
+  --sanc-atmos-vignette: 0.06;
+  --sanc-atmos-bloom: 0.34;
+  --sanc-atmos-blur: 56px;
+  --sanc-glass-blur: 24px;
+}
+
+html[data-sanctuary-intensity="full"] {
+  --sanc-atmos-grade: 0.3;
+  --sanc-atmos-grain: 0.045;
+  --sanc-atmos-vignette: 0.11;
+  --sanc-atmos-bloom: 0.6;
+  --sanc-atmos-blur: 68px;
+  --sanc-glass-blur: 30px;
+}
+
+html[data-sanctuary-intensity="dream"] {
+  --sanc-atmos-grade: 0.42;
+  --sanc-atmos-grain: 0.06;
+  --sanc-atmos-vignette: 0.17;
+  --sanc-atmos-bloom: 0.9;
+  --sanc-atmos-blur: 86px;
+  --sanc-glass-blur: 40px;
+}
+
+/* At REST the grade multiplies deep forest rather than cream, and the ground
+   underneath is already dark. Left at the daytime alpha it would compound into
+   an unreadable page, so every intensity pulls back at midnight. Two attributes
+   outrank the single-attribute blocks above without needing !important. */
+html[data-sanctuary-phase="rest"][data-sanctuary-intensity="soft"] {
+  --sanc-atmos-grade: 0.13;
+}
+
+html[data-sanctuary-phase="rest"][data-sanctuary-intensity="full"] {
+  --sanc-atmos-grade: 0.2;
+}
+
+html[data-sanctuary-phase="rest"][data-sanctuary-intensity="dream"] {
+  --sanc-atmos-grade: 0.28;
+}
+
+/* ==========================================================================
+   THE GROUND
+   Four blooms of the current phase over its ground color, pinned to the
+   viewport so they behave like a room the page sits in rather than a texture
+   that scrolls with it. The transition is long enough that the sun moving
+   across the day is something you notice having happened, never something you
+   catch happening.
+   ========================================================================== */
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  ) {
+  background-color: var(--sanc-ground) !important;
+  background-image: radial-gradient(
+      ellipse 90% 62% at 12% 8%,
+      color-mix(in oklab, var(--sanc-bloom-1) 42%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      ellipse 78% 55% at 88% 4%,
+      color-mix(in oklab, var(--sanc-bloom-2) 38%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 96% 60% at 76% 96%,
+      color-mix(in oklab, var(--sanc-bloom-4) 34%, transparent),
+      transparent 64%
+    ),
+    radial-gradient(
+      ellipse 84% 58% at 4% 88%,
+      color-mix(in oklab, var(--sanc-bloom-3) 32%, transparent),
+      transparent 62%
+    ) !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+  transition: background-color var(--sanc-dur-phase) var(--sanc-ease-breath);
+}
+
+/* --- De-whitening: let the ground actually be the ground ---------------- */
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  :is(
+    body, div, section, main, article, aside, header, footer, nav, form,
+    fieldset, ul, ol, li, dl, dd, dt, table, thead, tbody, tfoot, tr, td, th,
+    figure, p, h1, h2, h3, h4, h5, h6, span, label, hgroup, details, summary,
+    blockquote, pre
+  ):not(
+    [style*="background-image"],
+    [style*="background:url"],
+    [style*="background: url"],
+    [data-sanctuary-atmosphere],
+    svg, svg *
+  ) {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  :is(body, div, section, main, article, aside, header, footer, nav, table, td,
+      th, li, hr, fieldset, details, input, textarea, select, button) {
+  border-color: var(--sanc-edge) !important;
+}
+
+/* --- Ink follows the phase. At REST this is pale sage on forest. -------- */
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  :is(body, p, li, td, dd, span, div, label, figcaption, article, section, summary) {
+  color: var(--sanc-ink-2);
+  transition: color var(--sanc-dur-phase) var(--sanc-ease-breath);
+}
+
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--sanc-ink) !important;
+}
+
+/* ==========================================================================
+   SACRED CONTAINERS
+   Flat, not embossed. The brief asks for flat surfaces, so a container earns
+   its separation from a hairline edge, a generous radius, and the faintest
+   lift — not from a drop shadow doing an impression of a physical card.
+   ========================================================================== */
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  :is(
+    [class*="card" i], [class*="panel" i], [class*="tile" i],
+    [class*="widget" i], [class*="sheet" i], [class*="well" i],
+    [class*="callout" i], [role="article"], article > figure
+  ):not([style*="background-image"], [data-sanctuary-atmosphere]) {
+  background-color: var(--sanc-surface) !important;
+  border: 1px solid var(--sanc-edge-soft) !important;
+  border-radius: var(--sanc-r-lg) !important;
+  box-shadow: var(--sanc-shadow-sm) !important;
+  transition: box-shadow var(--sanc-dur-settle) var(--sanc-ease),
+    background-color var(--sanc-dur-phase) var(--sanc-ease-breath);
+}
+
+/* ==========================================================================
+   DIGITAL GLASS
+   "Heavy backdrop filters (24px – 40px) layered over dynamic backgrounds…
+    allows the underlying weather or mood of the OS to permeate the workspace."
+   Anything lighter and the atmosphere stops coming through, which defeats the
+   entire point of having built one.
+   ========================================================================== */
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  :is(
+    [class*="modal" i], [class*="dialog" i], [class*="popover" i],
+    [class*="dropdown" i], [class*="tooltip" i], [class*="flyout" i],
+    [class*="drawer" i], [class*="overlay" i],
+    [role="dialog"], [role="menu"], [role="listbox"], [role="tooltip"], dialog
+  ):not([style*="background-image"], [data-sanctuary-atmosphere]) {
+  background-color: var(--sanc-surface-high) !important;
+  -webkit-backdrop-filter: blur(var(--sanc-glass-blur)) saturate(var(--sanc-glass-saturate));
+  backdrop-filter: blur(var(--sanc-glass-blur)) saturate(var(--sanc-glass-saturate));
+  border: 1px solid var(--sanc-edge-soft) !important;
+  border-radius: var(--sanc-r-lg) !important;
+  box-shadow: var(--sanc-shadow-lg) !important;
+}
+
+/* --- Cinematic shadows --------------------------------------------------
+   "Text overlaying complex backgrounds uses heavy, layered text-shadows so it
+    pops beautifully without needing a solid container behind it."
+   Three layers: a near halo for legibility, a mid spread for separation, a
+   wide soft one for depth. Words floating in the atmosphere of the room. */
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  :is(h1, h2, h3) {
+  text-shadow: var(--sanc-text-float);
+}
+
+/* ==========================================================================
+   CONTROLS
+   ========================================================================== */
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]),
+      textarea, select) {
+  background-color: var(--sanc-surface) !important;
+  color: var(--sanc-ink) !important;
+  border: 1px solid var(--sanc-edge) !important;
+  border-radius: var(--sanc-r-md) !important;
+  box-shadow: none !important;
+  padding: 0.55em 0.9em;
+  transition: border-color var(--sanc-dur-quick) var(--sanc-ease),
+    box-shadow var(--sanc-dur-quick) var(--sanc-ease);
+}
+
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  :is(input, textarea, select):focus-visible {
+  outline: none !important;
+  border-color: var(--sanc-accent) !important;
+  box-shadow: 0 0 0 3px var(--sanc-accent-wash) !important;
+}
+
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  :is(button, [role="button"], [class*="btn" i], [type="button"], [type="submit"], [type="reset"]):not(
+    [class*="icon" i], [data-sanctuary-atmosphere]
+  ) {
+  background-color: var(--sanc-ground-deep) !important;
+  color: var(--sanc-ink) !important;
+  border: 1px solid var(--sanc-edge) !important;
+  border-radius: var(--sanc-r-pill) !important;
+  box-shadow: none !important;
+  padding: 0.45em 1.15em;
+  cursor: pointer;
+  transition: background-color var(--sanc-dur-quick) var(--sanc-ease),
+    transform var(--sanc-dur-quick) var(--sanc-ease);
+}
+
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  :is(button, [class*="btn" i], [type="button"], [type="submit"]):not([class*="icon" i]):hover {
+  background-color: var(--sanc-accent-wash) !important;
+  border-color: var(--sanc-accent) !important;
+}
+
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  :is([type="submit"], [class*="primary" i], [class*="cta" i]):not([class*="icon" i]) {
+  background-color: var(--sanc-accent) !important;
+  border-color: var(--sanc-accent-deep) !important;
+  color: var(--sanc-ground) !important;
+}
+
+/* ==========================================================================
+   MARKS OF THE SYSTEM
+   ========================================================================== */
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  a:not([class*="btn" i], [class*="button" i], [class*="icon" i]) {
+  color: var(--sanc-accent-deep) !important;
+  text-decoration-color: var(--sanc-accent-wash);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition: color var(--sanc-dur-quick) var(--sanc-ease),
+    text-decoration-color var(--sanc-dur-quick) var(--sanc-ease);
+}
+
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  a:not([class*="btn" i], [class*="button" i], [class*="icon" i]):hover {
+  color: var(--sanc-accent) !important;
+  text-decoration-color: var(--sanc-accent);
+}
+
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  hr {
+  border: none !important;
+  height: 1px !important;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--sanc-edge-strong) 18%,
+    var(--sanc-accent-wash) 50%,
+    var(--sanc-edge-strong) 82%,
+    transparent
+  ) !important;
+}
+
+html[data-sanctuary-surfaces="on"] ::selection {
+  background: var(--sanc-accent-wash);
+  color: var(--sanc-ink);
+}
+
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  ) ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  ) ::-webkit-scrollbar-track {
+  background: var(--sanc-ground-deep);
+}
+
+html[data-sanctuary-surfaces="on"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  ) ::-webkit-scrollbar-thumb {
+  background: var(--sanc-ink-4);
+  border: 3px solid var(--sanc-ground-deep);
+  border-radius: var(--sanc-r-pill);
+}
+
+/* ==========================================================================
+   RADICAL CALMNESS
+   ----------------------------------------------------------------------------
+   "We are abandoning the standard UI paradigms — ribbons, blinking red
+    badges, rigid grids, and urgent alerts."
+
+   So: the pulsing stops, the shouting reds are desaturated to the phase's own
+   calm signal, and a notification becomes a fact on the page instead of an
+   interruption demanding a cortisol response.
+
+   Scoped strictly to things that name themselves as alarms. Deliberately NOT
+   a global `animation-iteration-count: 1`, which would freeze every loading
+   spinner and carousel on the web and turn calm into broken.
+   ========================================================================== */
+html[data-sanctuary-calm="on"] :is(
+    [class*="badge" i], [class*="unread" i], [class*="notif" i],
+    [class*="alert" i], [class*="toast" i], [class*="urgent" i],
+    [class*="danger" i], [class*="critical" i], [class*="overdue" i],
+    [class*="blink" i], [class*="pulse" i],
+    [role="alert"], [role="status"]
+  ):not([data-sanctuary-atmosphere], [class*="icon" i]) {
+  animation: none !important;
+  box-shadow: none !important;
+  border-radius: var(--sanc-r-pill) !important;
+  filter: saturate(0.42);
+  transition: filter var(--sanc-dur-settle) var(--sanc-ease);
+}
+
+html[data-sanctuary-calm="on"] :is(
+    [class*="badge" i], [class*="unread" i], [class*="notif" i], [class*="count" i]
+  ):not([data-sanctuary-atmosphere], [class*="icon" i], a, button) {
+  background-color: var(--sanc-calm-signal) !important;
+  color: var(--sanc-ink-2) !important;
+  border-color: var(--sanc-edge) !important;
+}
+
+/* Hovering an alarm restores its true color, so nothing is ever hidden —
+   only quieted until you choose to look straight at it. */
+html[data-sanctuary-calm="on"] :is(
+    [class*="alert" i], [class*="urgent" i], [class*="danger" i], [role="alert"]
+  ):hover {
+  filter: none;
+}
+
+/* ==========================================================================
+   IMAGERY
+   ========================================================================== */
+html[data-sanctuary-surfaces="on"][data-sanctuary-intensity="dream"]
+  :is(img, video):not([class*="icon" i], [class*="logo" i], [class*="avatar" i]) {
+  filter: sepia(0.13) saturate(0.9) contrast(0.97) brightness(1.02);
+  border-radius: var(--sanc-r-md);
+  transition: filter var(--sanc-dur-drift) var(--sanc-ease);
+}
+
+/* At REST the room is dark, so a full-brightness photograph is a flashlight
+   in a forest. Dim it until it belongs to the hour. */
+html[data-sanctuary-surfaces="on"][data-sanctuary-phase="rest"]:is(
+    [data-sanctuary-intensity="full"], [data-sanctuary-intensity="dream"]
+  )
+  :is(img, video):not([class*="icon" i], [class*="logo" i]) {
+  filter: brightness(0.84) saturate(0.86);
+  transition: filter var(--sanc-dur-drift) var(--sanc-ease);
+}
+
+html[data-sanctuary-surfaces="on"]
+  :is(img, video):not([class*="icon" i], [class*="logo" i]):hover {
+  filter: none;
+}
+
+/* --- Never animate at someone who asked us not to -----------------------
+   The root element is listed on its own line for a reason: `html[...] *`
+   matches descendants only, so without it the page ground would keep fading
+   across the full 2.6s phase transition for someone who explicitly asked for
+   less motion — the one element whose animation is hardest to look away from. */
+@media (prefers-reduced-motion: reduce) {
+  html[data-sanctuary-surfaces="on"],
+  html[data-sanctuary-surfaces="on"] *,
+  html[data-sanctuary-surfaces="on"] *::before,
+  html[data-sanctuary-surfaces="on"] *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

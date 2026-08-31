@@ -1,0 +1,352 @@
+/* ============================================================================
+   SANCTUARY OS — Control panel
+   ----------------------------------------------------------------------------
+   Built in the system it ships: the same phase tokens, the same two voices,
+   the same breathing blooms and porous grain. It also follows the arc of the
+   sun, so opening it at midnight opens a forest.
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 344px;
+  margin: 0;
+  padding: 0 0 var(--sanc-s-5);
+  position: relative;
+  overflow-x: hidden;
+  background: var(--sanc-ground);
+  color: var(--sanc-ink-2);
+  font-family: var(--sanc-voice-narrative);
+  font-weight: var(--sanc-w-body);
+  line-height: var(--sanc-lh-body);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--sanc-dur-phase) var(--sanc-ease-breath),
+    color var(--sanc-dur-phase) var(--sanc-ease-breath);
+}
+
+/* --- The same atmosphere, at popup scale -------------------------------- */
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.bloom {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(46px);
+  opacity: 0.62;
+  animation: breath var(--sanc-breath) var(--sanc-ease-breath) infinite;
+  transition: background var(--sanc-dur-phase) var(--sanc-ease-breath);
+}
+
+.bloom.b1 {
+  width: 240px;
+  height: 210px;
+  top: -60px;
+  left: -50px;
+  background: radial-gradient(circle, var(--sanc-bloom-1), transparent 68%);
+}
+
+.bloom.b2 {
+  width: 260px;
+  height: 230px;
+  top: -40px;
+  right: -80px;
+  background: radial-gradient(circle, var(--sanc-bloom-2), transparent 68%);
+  animation-delay: -7s;
+}
+
+.bloom.b3 {
+  width: 280px;
+  height: 240px;
+  bottom: -90px;
+  left: -40px;
+  background: radial-gradient(circle, var(--sanc-bloom-4), transparent 70%);
+  animation-delay: -13s;
+}
+
+/* Three breaths per minute, the same rhythm the pages get. */
+@keyframes breath {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.08); opacity: 0.72; }
+}
+
+.grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+}
+
+header,
+main {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Masthead ------------------------------------------------------------ */
+/* Chrome caps popups at 600px and scrolls past it. Vertical rhythm is tuned to
+   keep the whole panel close to that, so the Celebrate button stays reachable
+   without a hunt. */
+.masthead {
+  padding: var(--sanc-s-4) var(--sanc-s-5) var(--sanc-s-3);
+  text-align: center;
+}
+
+h1 {
+  font-family: var(--sanc-voice-narrative-display);
+  font-weight: var(--sanc-w-air);
+  font-size: 36px;
+  line-height: var(--sanc-lh-tight);
+  letter-spacing: var(--sanc-track-display);
+  color: var(--sanc-ink);
+  margin: 0 0 2px;
+  text-shadow: var(--sanc-text-float);
+}
+
+.subtitle {
+  font-family: var(--sanc-voice-narrative);
+  font-style: italic;
+  font-weight: var(--sanc-w-air);
+  font-size: 15px;
+  color: var(--sanc-ink-3);
+  margin: 0;
+}
+
+/* The structural voice, tracked out. This is the editorial hierarchy the
+   brief describes, and it is doing the same job here that it does on a page. */
+.eyebrow {
+  font-family: var(--sanc-voice-structural);
+  font-size: 10px;
+  font-weight: var(--sanc-w-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--sanc-track-structural);
+  color: var(--sanc-ink-4);
+  margin: 0 0 var(--sanc-s-2);
+}
+
+.masthead .eyebrow {
+  margin-bottom: var(--sanc-s-1);
+}
+
+/* --- Rows ---------------------------------------------------------------- */
+main {
+  padding: 0 var(--sanc-s-5);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sanc-s-3);
+  padding: var(--sanc-s-2) 0;
+}
+
+.row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.row-title {
+  font-family: var(--sanc-voice-narrative);
+  font-size: 17px;
+  font-weight: var(--sanc-w-body);
+  color: var(--sanc-ink);
+}
+
+.row--primary .row-title {
+  font-family: var(--sanc-voice-narrative-display);
+  font-size: 21px;
+}
+
+.row-note {
+  font-family: var(--sanc-voice-structural);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.012em;
+  color: var(--sanc-ink-4);
+}
+
+hr {
+  border: none;
+  height: 1px;
+  margin: var(--sanc-s-2) 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--sanc-edge) 22%,
+    var(--sanc-edge) 78%,
+    transparent
+  );
+}
+
+/* --- Switch --------------------------------------------------------------
+   A pill that fills with the phase's accent. No red, no alarm, no ribbon. */
+.switch {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 27px;
+  padding: 3px;
+  border: 1px solid var(--sanc-edge);
+  border-radius: var(--sanc-r-pill);
+  background: var(--sanc-ground-deep);
+  cursor: pointer;
+  transition: background-color var(--sanc-dur-settle) var(--sanc-ease),
+    border-color var(--sanc-dur-settle) var(--sanc-ease);
+}
+
+.switch .knob {
+  display: block;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: var(--sanc-surface);
+  box-shadow: var(--sanc-shadow-sm);
+  transition: transform var(--sanc-dur-settle) var(--sanc-ease);
+}
+
+.switch[aria-checked="true"] {
+  background: var(--sanc-accent);
+  border-color: var(--sanc-accent-deep);
+}
+
+.switch[aria-checked="true"] .knob {
+  transform: translateX(19px);
+}
+
+.switch:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--sanc-accent-wash);
+}
+
+/* --- Segmented ----------------------------------------------------------- */
+.field {
+  padding: var(--sanc-s-2) 0 var(--sanc-s-1);
+}
+
+.segmented {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--sanc-edge-soft);
+  border-radius: var(--sanc-r-pill);
+  background: var(--sanc-surface-high);
+  -webkit-backdrop-filter: blur(var(--sanc-glass-blur)) saturate(var(--sanc-glass-saturate));
+  backdrop-filter: blur(var(--sanc-glass-blur)) saturate(var(--sanc-glass-saturate));
+}
+
+/* Five phase labels have to survive inside 344px of popup, and DESCENT is the
+   longest word in the system. Tracking is the first thing to give: 0.05em still
+   reads as editorial uppercase, and it buys the ~13px that stops the ellipsis. */
+.segmented button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 7px 2px;
+  border: none;
+  border-radius: var(--sanc-r-pill);
+  background: transparent;
+  color: var(--sanc-ink-3);
+  font-family: var(--sanc-voice-structural);
+  font-size: 9.5px;
+  font-weight: var(--sanc-w-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color var(--sanc-dur-quick) var(--sanc-ease),
+    color var(--sanc-dur-quick) var(--sanc-ease);
+}
+
+.segmented button:hover {
+  color: var(--sanc-ink);
+}
+
+.segmented button[aria-checked="true"] {
+  background: var(--sanc-accent);
+  color: var(--sanc-ground);
+}
+
+.segmented button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--sanc-accent-wash);
+}
+
+.hint {
+  font-family: var(--sanc-voice-narrative);
+  font-style: italic;
+  font-size: 12.5px;
+  line-height: var(--sanc-lh-snug);
+  color: var(--sanc-ink-4);
+  margin: var(--sanc-s-2) 2px 0;
+}
+
+/* --- Celebrate ------------------------------------------------------------ */
+.celebrate {
+  display: block;
+  width: 100%;
+  margin-top: var(--sanc-s-3);
+  padding: 12px;
+  border: 1px solid var(--sanc-accent-deep);
+  border-radius: var(--sanc-r-pill);
+  background: var(--sanc-accent);
+  color: var(--sanc-ground);
+  font-family: var(--sanc-voice-narrative-display);
+  font-size: 19px;
+  font-weight: var(--sanc-w-medium);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform var(--sanc-dur-quick) var(--sanc-ease),
+    filter var(--sanc-dur-quick) var(--sanc-ease);
+}
+
+.celebrate:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.celebrate:active {
+  transform: translateY(0);
+}
+
+.celebrate:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--sanc-accent-wash);
+}
+
+.shortcuts {
+  font-family: var(--sanc-voice-structural);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-align: center;
+  color: var(--sanc-ink-4);
+  margin: var(--sanc-s-3) 0 0;
+}
+
+.shortcuts span {
+  color: var(--sanc-ink-3);
+  font-weight: var(--sanc-w-medium);
+}
+
+/* --- Disabled state ------------------------------------------------------
+   Dim rather than hide. Nothing vanishes; it just stops asking for attention. */
+body[data-off] main > :not(.row--primary) {
+  opacity: 0.38;
+  pointer-events: none;
+  transition: opacity var(--sanc-dur-settle) var(--sanc-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bloom {
+    animation: none;
+  }
+}

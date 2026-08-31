@@ -1,0 +1,275 @@
+/* ============================================================================
+   SANCTUARY OS — Chromatics
+   ----------------------------------------------------------------------------
+   "We do not merely toggle between Light and Dark mode. Color is the invisible
+    arc of the sun. It is the story of a day passing."
+
+   So this file is not a theme and its inverse. It is four phases of one day,
+   and the interface moves through them the way a room does.
+
+     ASCEND    05–11   Morning        Cool Cream, Pale Sage      crisp, fresh
+     ZENITH    11–16   Midday         Base Cream, True Gold      bright, open
+     DESCENT   16–21   Golden Hour    Warm Cream, Orange-Gold,
+                                      Earthy Brown, Sage deep    sun-kissed
+     REST      21–05   Midnight       Deep Forest, Shadow        deep, safe
+
+   Every phase redefines the same semantic tokens, so nothing downstream ever
+   asks what time it is — surfaces.css just paints `--sanc-ground` and the day
+   takes care of itself. REST is the reason the semantics are named by role
+   instead of by lightness: at midnight `--sanc-ink` is pale sage on forest,
+   and not one rule below has to know.
+
+   Transitions are deliberately slow. A phase change you can catch happening is
+   a notification; a phase change you only notice afterward is a room.
+   ========================================================================== */
+
+:root {
+  /* --- Structure ---------------------------------------------------------
+     Radii are generous everywhere. The brief rejects rigid grids, and a
+     rectangle with a hard corner is the smallest possible unit of rigidity. */
+  --sanc-r-xs: 4px;
+  --sanc-r-sm: 8px;
+  --sanc-r-md: 14px;
+  --sanc-r-lg: 22px;
+  --sanc-r-xl: 36px;
+  --sanc-r-pill: 999px;
+
+  --sanc-s-1: 4px;
+  --sanc-s-2: 8px;
+  --sanc-s-3: 12px;
+  --sanc-s-4: 18px;
+  --sanc-s-5: 28px;
+  --sanc-s-6: 44px;
+  --sanc-s-7: 70px;
+
+  /* --- The two voices ----------------------------------------------------
+     Narrative carries meaning. Structural carries wayfinding. A design system
+     that gives navigation the same voice as poetry has no hierarchy at all. */
+  --sanc-voice-narrative: "Sanctuary Cormorant Text", "Cormorant Garamond",
+    Garamond, "EB Garamond", Georgia, serif;
+  --sanc-voice-narrative-display: "Sanctuary Cormorant Display",
+    "Cormorant Garamond", Garamond, "EB Garamond", Georgia, serif;
+  --sanc-voice-structural: "Sanctuary Manrope", Manrope, "Inter",
+    system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sanc-voice-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo,
+    Consolas, monospace;
+
+  --sanc-w-air: 300;
+  --sanc-w-body: 500;
+  --sanc-w-medium: 600;
+  --sanc-w-bold: 700;
+
+  --sanc-lh-tight: 1.14;
+  --sanc-lh-snug: 1.34;
+  --sanc-lh-body: 1.64;
+  --sanc-lh-loose: 1.8;
+
+  --sanc-track-display: -0.018em;
+  --sanc-track-body: 0.008em;
+  /* The structural voice tracks out in uppercase. This is the single value
+     that makes metadata read as editorial rather than as a form label. */
+  --sanc-track-structural: 0.15em;
+
+  /* --- Motion ------------------------------------------------------------
+     THE DIGITAL BREATH. Twenty seconds is not a design preference — it is
+     roughly three breaths per minute, the pace of a deep mammalian exhale.
+     The nervous system entrains to ambient rhythm whether or not anyone is
+     paying attention, so the background blooms are set here and everything
+     else in the system is tuned around them.
+
+     The long drifts are coprime-ish on purpose: 71, 97 and 127 seconds never
+     divide into each other, so the composition never returns to a pose you
+     have already seen. Breath you feel; drift you never catch repeating. */
+  --sanc-breath: 20s;
+  --sanc-drift-1: 71s;
+  --sanc-drift-2: 97s;
+  --sanc-drift-3: 127s;
+
+  --sanc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --sanc-ease-breath: cubic-bezier(0.45, 0, 0.55, 1);
+  --sanc-dur-quick: 180ms;
+  --sanc-dur-settle: 360ms;
+  --sanc-dur-drift: 680ms;
+  /* Long enough that the sun moving is something you notice having happened. */
+  --sanc-dur-phase: 2600ms;
+
+  /* --- Glass -------------------------------------------------------------
+     "Heavy backdrop filters (24px – 40px) layered over dynamic backgrounds."
+     Anything less and the weather underneath stops permeating. */
+  --sanc-glass-blur: 28px;
+  --sanc-glass-saturate: 1.3;
+
+  --sanc-z-atmosphere: 2147483640;
+  --sanc-z-confetti: 2147483645;
+}
+
+/* ==========================================================================
+   ASCEND — Morning. Cool Cream, Pale Sage.
+   Green-leaning and slightly cool, the way early light actually is before the
+   sun has warmed anything up.
+   ========================================================================== */
+html[data-sanctuary-phase="ascend"] {
+  --sanc-ground: #f4f5ef;
+  --sanc-ground-deep: #eaece2;
+  --sanc-surface: #fafbf6;
+  --sanc-surface-high: rgba(250, 251, 246, 0.72);
+
+  --sanc-ink: #26302a;
+  --sanc-ink-2: #3f4c43;
+  --sanc-ink-3: #63705f;
+  --sanc-ink-4: #94a08d;
+
+  --sanc-accent: #7e9b72;
+  --sanc-accent-deep: #5c7752;
+  --sanc-accent-wash: rgba(126, 155, 114, 0.14);
+
+  --sanc-edge: rgba(38, 48, 42, 0.11);
+  --sanc-edge-soft: rgba(38, 48, 42, 0.06);
+  --sanc-edge-strong: rgba(38, 48, 42, 0.2);
+  --sanc-shadow-hue: 38 48 42;
+
+  --sanc-grade: #edf0e6;
+  --sanc-bloom-1: #c8d5c2;
+  --sanc-bloom-2: #d3e0d6;
+  --sanc-bloom-3: #c6d6de;
+  --sanc-bloom-4: #e6e4c9;
+  --sanc-bloom-5: #ded2ce;
+
+  --sanc-calm-signal: #dfe4d5;
+  color-scheme: light;
+}
+
+/* ==========================================================================
+   ZENITH — Midday. Base Cream, True Gold.
+   The neutral hour. Nothing is tilted warm or cool; the room is simply open.
+   ========================================================================== */
+html[data-sanctuary-phase="zenith"] {
+  --sanc-ground: #faf6ec;
+  --sanc-ground-deep: #f2ecdd;
+  --sanc-surface: #fdfbf4;
+  --sanc-surface-high: rgba(253, 251, 244, 0.72);
+
+  --sanc-ink: #2b2721;
+  --sanc-ink-2: #4a4238;
+  --sanc-ink-3: #6e6456;
+  --sanc-ink-4: #9a8f7d;
+
+  --sanc-accent: #d4a72c;
+  --sanc-accent-deep: #a37d14;
+  --sanc-accent-wash: rgba(212, 167, 44, 0.14);
+
+  --sanc-edge: rgba(44, 34, 28, 0.1);
+  --sanc-edge-soft: rgba(44, 34, 28, 0.055);
+  --sanc-edge-strong: rgba(44, 34, 28, 0.19);
+  --sanc-shadow-hue: 44 34 28;
+
+  --sanc-grade: #f6eedc;
+  --sanc-bloom-1: #efcb84;
+  --sanc-bloom-2: #fbf3e0;
+  --sanc-bloom-3: #b4c3a8;
+  --sanc-bloom-4: #bfd0de;
+  --sanc-bloom-5: #e7c6b4;
+
+  --sanc-calm-signal: #efe3c8;
+  color-scheme: light;
+}
+
+/* ==========================================================================
+   DESCENT — Golden Hour. Warm Cream kissed by sunlight, Orange-Gold,
+   Earthy Brown, Sage rooting deep.
+   ========================================================================== */
+html[data-sanctuary-phase="descent"] {
+  --sanc-ground: #f7ebd7;
+  --sanc-ground-deep: #eeddc2;
+  --sanc-surface: #fcf3e4;
+  --sanc-surface-high: rgba(252, 243, 228, 0.74);
+
+  --sanc-ink: #33241a;
+  --sanc-ink-2: #4e3826;
+  --sanc-ink-3: #6f5540;
+  --sanc-ink-4: #9c8067;
+
+  --sanc-accent: #e08b3c;
+  --sanc-accent-deep: #8a5a3b;
+  --sanc-accent-wash: rgba(224, 139, 60, 0.16);
+
+  --sanc-edge: rgba(51, 36, 26, 0.12);
+  --sanc-edge-soft: rgba(51, 36, 26, 0.06);
+  --sanc-edge-strong: rgba(51, 36, 26, 0.22);
+  --sanc-shadow-hue: 51 36 26;
+
+  --sanc-grade: #f2e0c4;
+  --sanc-bloom-1: #e9a24f;
+  --sanc-bloom-2: #d4805c;
+  --sanc-bloom-3: #a9714a;
+  --sanc-bloom-4: #6e7f63;
+  --sanc-bloom-5: #dfaf9a;
+
+  --sanc-calm-signal: #eed7bb;
+  color-scheme: light;
+}
+
+/* ==========================================================================
+   REST — Midnight. Deep Forest and Shadow.
+   Not "dark mode." A forest at night is not a bright room with the lights off;
+   it is warm, green-black, and safe. Ink inverts to pale sage and every rule
+   downstream keeps working, because they were all written against roles.
+   ========================================================================== */
+html[data-sanctuary-phase="rest"] {
+  --sanc-ground: #13201a;
+  --sanc-ground-deep: #0e1512;
+  --sanc-surface: #1c2c24;
+  --sanc-surface-high: rgba(28, 44, 36, 0.74);
+
+  --sanc-ink: #dde6d9;
+  --sanc-ink-2: #bcc9b7;
+  --sanc-ink-3: #93a48e;
+  --sanc-ink-4: #6c7c68;
+
+  --sanc-accent: #b8a05c;
+  --sanc-accent-deep: #d6bf7e;
+  --sanc-accent-wash: rgba(184, 160, 92, 0.18);
+
+  --sanc-edge: rgba(221, 230, 217, 0.12);
+  --sanc-edge-soft: rgba(221, 230, 217, 0.07);
+  --sanc-edge-strong: rgba(221, 230, 217, 0.22);
+  --sanc-shadow-hue: 6 12 9;
+
+  --sanc-grade: #16241d;
+  --sanc-bloom-1: #24382c;
+  --sanc-bloom-2: #35513c;
+  --sanc-bloom-3: #1a2e2c;
+  --sanc-bloom-4: #6b5c34;
+  --sanc-bloom-5: #33283a;
+
+  --sanc-calm-signal: #2a3a30;
+  color-scheme: dark;
+}
+
+/* --- Shadows, derived from whatever phase is current ---------------------
+   Warm-toned and never black. A shadow is light filtered by the room, and at
+   midnight the room is a forest, so even the shadows go green. */
+:root {
+  --sanc-shadow-sm: 0 2px 8px rgba(var(--sanc-shadow-hue) / 0.07),
+    0 1px 2px rgba(var(--sanc-shadow-hue) / 0.05);
+  --sanc-shadow-md: 0 6px 22px rgba(var(--sanc-shadow-hue) / 0.09),
+    0 2px 6px rgba(var(--sanc-shadow-hue) / 0.06);
+  --sanc-shadow-lg: 0 20px 54px rgba(var(--sanc-shadow-hue) / 0.13),
+    0 6px 16px rgba(var(--sanc-shadow-hue) / 0.07);
+  --sanc-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(var(--sanc-shadow-hue) / 0.05);
+
+  /* CINEMATIC SHADOWS. Layered so text can float directly on the atmosphere
+     without a solid container behind it — a near halo for legibility, a mid
+     spread for separation, a wide soft one for depth. */
+  --sanc-text-float: 0 1px 2px rgba(var(--sanc-shadow-hue) / 0.16),
+    0 3px 12px rgba(var(--sanc-shadow-hue) / 0.12),
+    0 10px 34px rgba(var(--sanc-shadow-hue) / 0.09);
+
+  /* --- Atmosphere dials, overridden per intensity in surfaces.css -------- */
+  --sanc-atmos-grade: 0.3;
+  --sanc-atmos-grain: 0.045;
+  --sanc-atmos-vignette: 0.11;
+  --sanc-atmos-bloom: 0.6;
+  --sanc-atmos-blur: 68px;
+}
