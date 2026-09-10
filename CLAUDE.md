@@ -1,3 +1,10 @@
+> **THE CHARTER GOVERNS.** Read `~/Bastion/THE-CHARTER.md` in full before the
+> first action of this session — the four ground laws (resolve never report ·
+> research primary sources · always exceed · open with what is working), the
+> product standard, the board, and the architecture doctrine. It is also the
+> head of `~/Bastion/STANDING_ORDERS.md` = `~/CLAUDE.md`. When a default and a
+> law disagree, the law wins. Anything in this file that conflicts loses.
+
 # Project Instructions
 
 ## Docs Image Workflow
